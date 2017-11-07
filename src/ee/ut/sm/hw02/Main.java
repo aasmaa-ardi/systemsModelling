@@ -3,6 +3,9 @@ package ee.ut.sm.hw02;
 public class Main {
 
     public static void main(String[] args) {
-        // write your code here
+        //get input from user
+        //generate plan
+        //return result
+        TripPlannerController controller = new TripPlannerController();
     }
 }
