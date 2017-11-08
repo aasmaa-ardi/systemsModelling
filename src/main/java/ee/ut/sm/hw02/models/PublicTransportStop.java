@@ -5,6 +5,7 @@ package ee.ut.sm.hw02.models;
  */
 
 public class PublicTransportStop {
+
 	private Long id;
 	private Double latitude;
 	private Double longitude;

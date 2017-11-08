@@ -1,13 +1,13 @@
 package ee.ut.sm.hw02;
 
 import ee.ut.sm.hw02.enums.RouteType;
+import ee.ut.sm.hw02.helpers.TimeHelper;
 import ee.ut.sm.hw02.models.*;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.sql.*;
 import java.text.ParseException;
 import java.util.*;
 import java.util.Date;
@@ -49,21 +49,14 @@ public class TripPlannerController {
         for (Trip trip: trips.values()) {
             List<PublicTransportStop> stops = trip.getStops();
             for (int i = 1; i < stops.size() -1; i++) {
-                PublicTransportStop prevStop = stops.get(i-1);
-                PublicTransportStop currentStop = stops.get(i);
-                Date currentStopTime = currentStop.getTimetable().getTime(trip.getTripId());
-                Date prevStopTime = prevStop.getTimetable().getTime(trip.getTripId());
-                TravelInfo info = new TravelInfo();
+                PublicTransportStop actualStop = stops.get(i-1);
+                PublicTransportStop nextStop = stops.get(i);
+                TravelInfo info = new TravelInfo(actualStop, nextStop, trip.getTripId());
 
-                info.setNextStop(currentStop);
-                long travelTime = Math.abs(currentStopTime.getTime() - prevStopTime.getTime());
-                info.setTravelTime(TimeHelper.getDate(travelTime));
-                prevStop.getTimetable().addInfo(trip.getTripId(), info);
+                actualStop.getTimetable().addInfo(trip.getTripId(), info);
             }
             PublicTransportStop lastStop = trip.getStops().getLast();
-            TravelInfo info = new TravelInfo();
-            info.setNextStop(null);
-            info.setTravelTime(null);
+            TravelInfo info = new TravelInfo(lastStop, null, null);
             lastStop.getTimetable().addInfo(trip.getTripId(), info);
         }
         System.out.println("Stops info loaded...");

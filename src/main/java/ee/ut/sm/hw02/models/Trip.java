@@ -1,18 +1,13 @@
-package ee.ut.sm.hw02;
+package ee.ut.sm.hw02.models;
 
-import ee.ut.sm.hw02.models.PublicTransportStop;
-import ee.ut.sm.hw02.models.Route;
-
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 
 public class Trip {
+
     private Long tripId;
-    private Route route;
     private Long serviceId;
     private String directionCode;
+    private Route route;
     private LinkedList<PublicTransportStop> stops;
     private boolean[] days;
 

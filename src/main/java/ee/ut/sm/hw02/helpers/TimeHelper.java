@@ -1,4 +1,4 @@
-package ee.ut.sm.hw02;
+package ee.ut.sm.hw02.helpers;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

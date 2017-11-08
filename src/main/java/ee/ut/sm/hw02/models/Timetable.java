@@ -1,7 +1,5 @@
 package ee.ut.sm.hw02.models;
 
-import ee.ut.sm.hw02.Trip;
-
 import java.util.*;
 
 public class Timetable {

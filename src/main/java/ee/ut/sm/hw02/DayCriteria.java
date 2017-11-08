@@ -1,5 +1,7 @@
 package ee.ut.sm.hw02;
 
+import ee.ut.sm.hw02.models.Trip;
+
 import java.util.ArrayList;
 import java.util.List;
 

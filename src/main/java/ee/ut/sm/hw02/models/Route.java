@@ -1,6 +1,5 @@
 package ee.ut.sm.hw02.models;
 
-import ee.ut.sm.hw02.Trip;
 import ee.ut.sm.hw02.enums.RouteType;
 
 import java.util.ArrayList;
@@ -13,14 +12,10 @@ public class Route {
 	private String id;
 	private String shortName;
 	private String longName;
-	private PublicTransportStop startStop;
-	private PublicTransportStop lastStop;
-	private List<PublicTransportStop> stops;
-	private List<Trip> trips;
-	private RouteType type;
+    private RouteType type;
+    private List<Trip> trips;
 
 	public Route() {
-        stops = new LinkedList<>();
         trips = new ArrayList<>();
     }
 
@@ -46,30 +41,6 @@ public class Route {
 
     public void setLongName(String longName) {
         this.longName = longName;
-    }
-
-    public PublicTransportStop getStartStop() {
-        return startStop;
-    }
-
-    public void setStartStop(PublicTransportStop startStop) {
-        this.startStop = startStop;
-    }
-
-    public PublicTransportStop getLastStop() {
-        return lastStop;
-    }
-
-    public void setLastStop(PublicTransportStop lastStop) {
-        this.lastStop = lastStop;
-    }
-
-    public List<PublicTransportStop> getStops() {
-        return stops;
-    }
-
-    public void setStops(List<PublicTransportStop> stops) {
-        this.stops = stops;
     }
 
     public List<Trip> getTrips() {
