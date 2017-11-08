@@ -36,6 +36,7 @@ public class Main {
         Date departureTime = format.parse(line);
         long time = departureTime.getTime();
         date.setTime(time);
+        //TODO ADD VALIDATION OF INPUT
         */
 
         //generate plan

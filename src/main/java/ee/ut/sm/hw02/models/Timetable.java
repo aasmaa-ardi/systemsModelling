@@ -1,22 +1,20 @@
 package ee.ut.sm.hw02.models;
 
-import ee.ut.sm.hw02.enums.TimetableType;
+import ee.ut.sm.hw02.Trip;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Timetable {
-	private Map<Long, List<String>> departureTimes;
-	private PublicTransportStop stop;
-	private TimetableType timetableType;
+    private PublicTransportStop stop;
+    private List<Trip> trips;
+    private Map<Long, Date> timesMap; //key = tripId, value = arrivalTime;
+    private Map<Long, TravelInfo> infoMap; //key = tripId, value = Travel info containing previous and next stop
 
-	public Map<Long, List<String>> getDepartureTimes() {
-		return departureTimes;
-	}
-
-	public void setDepartureTimes(Map<Long, List<String>> departureTimes) {
-		this.departureTimes = departureTimes;
-	}
+    public Timetable() {
+        trips = new ArrayList<>();
+        timesMap = new HashMap<>();
+        infoMap = new HashMap<>();
+    }
 
 	public PublicTransportStop getStop() {
 		return stop;
@@ -26,11 +24,43 @@ public class Timetable {
 		this.stop = stop;
 	}
 
-	public TimetableType getTimetableType() {
-		return timetableType;
-	}
+    public List<Trip> getTrips() {
+        return trips;
+    }
 
-	public void setTimetableType(TimetableType timetableType) {
-		this.timetableType = timetableType;
-	}
+    public void setTrips(List<Trip> trips) {
+        this.trips = trips;
+    }
+
+    public Map<Long, Date> getTimesMap() {
+        return timesMap;
+    }
+
+    public void setTimesMap(Map<Long, Date> timesMap) {
+        this.timesMap = timesMap;
+    }
+
+    public Map<Long, TravelInfo> getInfoMap() {
+        return infoMap;
+    }
+
+    public void setInfoMap(Map<Long, TravelInfo> infoMap) {
+        this.infoMap = infoMap;
+    }
+
+    public void addTrip(Trip trip) {
+        trips.add(trip);
+    }
+
+    public void addTime(Long tripId, Date time) {
+        timesMap.put(tripId, time);
+    }
+
+    public Date getTime(Long tripId) {
+        return timesMap.get(tripId);
+    }
+
+    public void addInfo(Long tripId, TravelInfo travelInfo) {
+        infoMap.put(tripId, travelInfo);
+    }
 }

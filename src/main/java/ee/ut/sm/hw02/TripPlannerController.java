@@ -1,10 +1,7 @@
 package ee.ut.sm.hw02;
 
 import ee.ut.sm.hw02.enums.RouteType;
-import ee.ut.sm.hw02.models.Plan;
-import ee.ut.sm.hw02.models.PublicTransportStop;
-import ee.ut.sm.hw02.models.Route;
-import ee.ut.sm.hw02.models.TravelInfo;
+import ee.ut.sm.hw02.models.*;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -33,13 +30,16 @@ public class TripPlannerController {
         System.out.println("All data loaded...");
     }
 
-    public Plan getPlanForTrip(Long departure, Long destination, Date departureTime)
-            throws DBConsistencyException, SQLException {
-        //get departureStop
+    public Plan getPlanForTrip(Long departure, Long destination, Date departureTime) {
+
         PublicTransportStop departureStop = stops.get(departure);
-        //get destinationStop
         PublicTransportStop destinationStop = stops.get(departure);
-        //try generate plan
+
+
+
+        //vertices = stops
+        //edges = trip from stop to stop -> uses stop.get
+
         return null;
     }
 
@@ -51,18 +51,20 @@ public class TripPlannerController {
             for (int i = 1; i < stops.size() -1; i++) {
                 PublicTransportStop prevStop = stops.get(i-1);
                 PublicTransportStop currentStop = stops.get(i);
+                Date currentStopTime = currentStop.getTimetable().getTime(trip.getTripId());
+                Date prevStopTime = prevStop.getTimetable().getTime(trip.getTripId());
                 TravelInfo info = new TravelInfo();
+
                 info.setNextStop(currentStop);
-                Date currentStopTime = currentStop.getTimeForTrip(trip.getTripId());
-                Date prevStopTime = prevStop.getTimeForTrip(trip.getTripId());
                 long travelTime = Math.abs(currentStopTime.getTime() - prevStopTime.getTime());
                 info.setTravelTime(TimeHelper.getDate(travelTime));
-                prevStop.addToInfoMap(trip.getTripId(), info);
+                prevStop.getTimetable().addInfo(trip.getTripId(), info);
             }
             PublicTransportStop lastStop = trip.getStops().getLast();
             TravelInfo info = new TravelInfo();
             info.setNextStop(null);
-            lastStop.addToInfoMap(trip.getTripId(), info);
+            info.setTravelTime(null);
+            lastStop.getTimetable().addInfo(trip.getTripId(), info);
         }
         System.out.println("Stops info loaded...");
     }
@@ -105,11 +107,12 @@ public class TripPlannerController {
                 String depTime = tokenizer.nextToken();
                 Long stopId = Long.parseLong(tokenizer.nextToken());
 
-                Trip trip = trips.get(tripId);
                 PublicTransportStop stop = stops.get(stopId);
+                Trip trip = trips.get(tripId);
+                Timetable timetable = stop.getTimetable();
                 trip.getStops().addLast(stop);
-                stop.addTrip(trip);
-                stop.addTime(tripId, TimeHelper.parseDate(depTime));
+                timetable.addTrip(trip);
+                timetable.addTime(tripId, TimeHelper.parseDate(depTime));
             }
         } catch (IOException | ParseException e) {
             System.err.println("Error while loading stop_times!");
