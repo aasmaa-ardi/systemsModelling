@@ -1,14 +1,15 @@
 package ee.ut.sm.hw02.models;
-
+import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.List;
 
 public class Trip {
 
     private Long tripId;
     private Long serviceId;
     private String directionCode;
-    private Route route;
-    private LinkedList<PublicTransportStop> stops;
+    private String routeId;
+    private LinkedList<Long> stops;
     private boolean[] days;
 
     public Trip() {
@@ -23,12 +24,12 @@ public class Trip {
         this.tripId = tripId;
     }
 
-    public Route getRoute() {
-        return route;
+    public String getRouteId() {
+        return routeId;
     }
 
-    public void setRoute(Route route) {
-        this.route = route;
+    public void setRouteId(String routeId) {
+        this.routeId = routeId;
     }
 
     public Long getServiceId() {
@@ -47,11 +48,11 @@ public class Trip {
         this.directionCode = directionCode;
     }
 
-    public LinkedList<PublicTransportStop> getStops() {
+    public LinkedList<Long> getStops() {
         return stops;
     }
 
-    public void setStops(LinkedList<PublicTransportStop> stops) {
+    public void setStops(LinkedList<Long> stops) {
         this.stops = stops;
     }
 
@@ -61,5 +62,16 @@ public class Trip {
 
     public void setDays(boolean[] days) {
         this.days = days;
+    }
+
+    @Override
+    public String toString() {
+        return "Trip{" +
+                "tripId=" + tripId +
+                ", serviceId=" + serviceId +
+                ", directionCode='" + directionCode + '\'' +
+                ", routeId=" + routeId +
+                ", days=" + Arrays.toString(days) +
+                '}';
     }
 }

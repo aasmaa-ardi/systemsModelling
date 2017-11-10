@@ -17,11 +17,32 @@ public class TripPlannerController {
     private Map<Long, PublicTransportStop> stops;
     private Map<Long, Trip> trips;
     private Map<String, Route> routes;
+    //private Map<String, PublicTransportStop> stops2;
+    private List<PublicTransportStop> stopsList;
+    private List<Trip> tripsList;
+
+    public List<PublicTransportStop> getStopsList() {
+        return stopsList;
+    }
+
+    public void setStopsList(List<PublicTransportStop> stopsList) {
+        this.stopsList = stopsList;
+    }
+
+    public List<Trip> getTripsList() {
+        return tripsList;
+    }
+
+    public void setTripsList(List<Trip> tripsList) {
+        this.tripsList = tripsList;
+    }
 
     public TripPlannerController() throws IOException {
         stops = new HashMap<>();
         routes = new HashMap<>();
         trips = new HashMap<>();
+        this.stopsList = new ArrayList<>();
+        this.tripsList = new ArrayList<>();
         if (! (loadStops() && loadRoutes() && loadTrips() && loadStopTimes() && loadCalendar())) {
             throw new IOException("Error while loading files");
         }
@@ -30,10 +51,14 @@ public class TripPlannerController {
         System.out.println("All data loaded...");
     }
 
+    //public boolean doesStopExist(String stopName) {
+    //    return stops2.containsKey(stopName.toUpperCase());
+    //}
+
     public Plan getPlanForTrip(Long departure, Long destination, Date departureTime) {
 
         PublicTransportStop departureStop = stops.get(departure);
-        PublicTransportStop destinationStop = stops.get(departure);
+        PublicTransportStop destinationStop = stops.get(destination);
 
 
 
@@ -47,15 +72,15 @@ public class TripPlannerController {
 
     private void setStopsInfo() {
         for (Trip trip: trips.values()) {
-            List<PublicTransportStop> stops = trip.getStops();
-            for (int i = 1; i < stops.size() -1; i++) {
-                PublicTransportStop actualStop = stops.get(i-1);
-                PublicTransportStop nextStop = stops.get(i);
+            List<Long> stopsList = trip.getStops();
+            for (int i = 1; i < stopsList.size() -1; i++) {
+                PublicTransportStop actualStop = stops.get(stopsList.get(i-1));
+                PublicTransportStop nextStop = stops.get(stopsList.get(i));
                 TravelInfo info = new TravelInfo(actualStop, nextStop, trip.getTripId());
 
                 actualStop.getTimetable().addInfo(trip.getTripId(), info);
             }
-            PublicTransportStop lastStop = trip.getStops().getLast();
+            PublicTransportStop lastStop = stops.get(trip.getStops().getLast());
             TravelInfo info = new TravelInfo(lastStop, null, null);
             lastStop.getTimetable().addInfo(trip.getTripId(), info);
         }
@@ -99,12 +124,11 @@ public class TripPlannerController {
                 tokenizer.nextToken();
                 String depTime = tokenizer.nextToken();
                 Long stopId = Long.parseLong(tokenizer.nextToken());
-
                 PublicTransportStop stop = stops.get(stopId);
                 Trip trip = trips.get(tripId);
                 Timetable timetable = stop.getTimetable();
-                trip.getStops().addLast(stop);
-                timetable.addTrip(trip);
+                trip.getStops().addLast(stop.getId());
+                timetable.addTrip(tripId);
                 timetable.addTime(tripId, TimeHelper.parseDate(depTime));
             }
         } catch (IOException | ParseException e) {
@@ -128,6 +152,8 @@ public class TripPlannerController {
                 stop.setLatitude(Double.parseDouble(tokenizer.nextToken()));
                 stop.setLongitude(Double.parseDouble(tokenizer.nextToken()));
                 stops.put(stop.getId(), stop);
+                stopsList.add(stop);
+                //stops2.put(stop.getStopName().toUpperCase(), stop);
             }
         } catch (IOException e) {
             System.err.println("Error while loading stops!");
@@ -147,12 +173,14 @@ public class TripPlannerController {
                 Trip trip = new Trip();
                 String routeId = tokenizer.nextToken();
                 Route route = routes.get(routeId);
-                trip.setRoute(route);
-                route.addTrip(trip);
+                trip.setRouteId(routeId);
+                route.addTrip(trip.getTripId());
                 trip.setServiceId(Long.parseLong(tokenizer.nextToken()));
                 trip.setTripId(Long.parseLong(tokenizer.nextToken()));
                 trip.setDirectionCode(tokenizer.nextToken());
                 trips.put(trip.getTripId(), trip);
+                tripsList.add(trip);
+                /*System.out.println(trip.toString());*/
             }
         } catch (IOException e) {
             System.err.println("Error while loading trips!");

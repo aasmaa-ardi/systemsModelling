@@ -4,15 +4,15 @@ import ee.ut.sm.hw02.enums.TravelType;
 
 public class TravelLeg {
 	private TravelType travelType;
-    private Route route;
-    private PublicTransportStop source;
-	private PublicTransportStop destination;
+    private Long route;
+    private Long source;
+	private Long destination;
 
-	public Route getRoute() {
+	public Long getRoute() {
 		return route;
 	}
 
-	public void setRoute(Route route) {
+	public void setRoute(Long route) {
 		this.route = route;
 	}
 
@@ -24,19 +24,19 @@ public class TravelLeg {
 		this.travelType = travelType;
 	}
 
-	public PublicTransportStop getSource() {
+	public Long getSource() {
 		return source;
 	}
 
-	public void setSource(PublicTransportStop source) {
+	public void setSource(Long source) {
 		this.source = source;
 	}
 
-	public PublicTransportStop getDestination() {
+	public Long getDestination() {
 		return destination;
 	}
 
-	public void setDestination(PublicTransportStop destination) {
+	public void setDestination(Long destination) {
 		this.destination = destination;
 	}
 }

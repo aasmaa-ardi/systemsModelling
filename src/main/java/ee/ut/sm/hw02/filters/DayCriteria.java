@@ -1,5 +1,6 @@
-package ee.ut.sm.hw02;
+package ee.ut.sm.hw02.filters;
 
+import ee.ut.sm.hw02.filters.Criteria;
 import ee.ut.sm.hw02.models.Trip;
 
 import java.util.ArrayList;

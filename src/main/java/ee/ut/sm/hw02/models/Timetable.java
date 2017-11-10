@@ -3,8 +3,8 @@ package ee.ut.sm.hw02.models;
 import java.util.*;
 
 public class Timetable {
-    private PublicTransportStop stop;
-    private List<Trip> trips;
+    private Long stop;
+    private List<Long> trips;
     private Map<Long, Date> timesMap; //key = tripId, value = arrivalTime;
     private Map<Long, TravelInfo> infoMap; //key = tripId, value = Travel info containing previous and next stop
 
@@ -14,19 +14,19 @@ public class Timetable {
         infoMap = new HashMap<>();
     }
 
-	public PublicTransportStop getStop() {
+	public Long getStop() {
 		return stop;
 	}
 
-	public void setStop(PublicTransportStop stop) {
+	public void setStop(Long stop) {
 		this.stop = stop;
 	}
 
-    public List<Trip> getTrips() {
+    public List<Long> getTrips() {
         return trips;
     }
 
-    public void setTrips(List<Trip> trips) {
+    public void setTrips(List<Long> trips) {
         this.trips = trips;
     }
 
@@ -46,7 +46,7 @@ public class Timetable {
         this.infoMap = infoMap;
     }
 
-    public void addTrip(Trip trip) {
+    public void addTrip(Long trip) {
         trips.add(trip);
     }
 

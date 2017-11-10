@@ -1,13 +1,24 @@
 package ee.ut.sm.hw02;
 
+import ee.ut.sm.hw02.filters.StopCriteria;
+import ee.ut.sm.hw02.filters.TripCriteria;
 import ee.ut.sm.hw02.models.Plan;
+import ee.ut.sm.hw02.models.PublicTransportStop;
+import ee.ut.sm.hw02.models.Trip;
 
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Scanner;
+import java.util.regex.Pattern;
 
 public class Main {
 
@@ -18,42 +29,78 @@ public class Main {
         } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
             e.printStackTrace();
         }
-        /*
-        Scanner reader = new Scanner(System.in);
-        System.out.println("Enter ID of departure stop:");
-        String line = reader.nextLine();
-        Long departureId = Long.parseLong(line);
-        System.out.println("Enter ID of destination stop:");
-        line = reader.nextLine();
-        Long destinationId = Long.parseLong(line);
-        System.out.println("Enter the departure date (format DD/MM/YYYY)");
-        line = reader.nextLine();
-        DateFormat format = new SimpleDateFormat("dd/MM/yyyy");
-        Date date = format.parse(line);
-        System.out.println("Enter the departure time (format HH:MM)");
-        format = new SimpleDateFormat("HH:mm");
-        line = reader.next();
-        Date departureTime = format.parse(line);
-        long time = departureTime.getTime();
-        date.setTime(time);
-        //TODO ADD VALIDATION OF INPUT
-        */
 
-        //generate plan
-        Plan tripPlan = null;
+        for(String arg:args){
+            System.out.println(arg);
+        }
+
+        if(isInputValid(args)) {
+            //generate plan
+            LocalDate date = LocalDate.parse(args[2], DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            int dayOfWeek = date.getDayOfWeek().getValue();
+            Plan tripPlan = null;
+            StopCriteria stopCriteria = new StopCriteria();
+            TripCriteria tripCriteria = new TripCriteria();
+            try {
+                TripPlannerController controller = new TripPlannerController();
+                PublicTransportStop departureStop = stopCriteria.getPublicTransportStopById(controller.getStopsList(), Long.valueOf(args[0]));
+                PublicTransportStop arrivalStop = stopCriteria.getPublicTransportStopById(controller.getStopsList(), Long.valueOf(args[1]));
+                System.out.println(departureStop.toString());
+                System.out.println(arrivalStop.toString());
+
+                //direct trips
+                List<Trip> trips = tripCriteria.meetsCriteria(controller.getTripsList(), arrivalStop.getId(), departureStop.getId(), dayOfWeek);
+                System.out.println(trips.size());
+                System.out.println(controller.getTripsList().size());
+                
+                /* List<PublicTransportStop> departureStops = stopCriteria.meetsCriteria(controller.getStopsList(), args[0]);
+                List<PublicTransportStop> arrivalStops = stopCriteria.meetsCriteria(controller.getStopsList(), args[1]);
+                if(departureStops.size()==0){
+                    System.out.println("Couldn't find departure stop with name: "+args[0]);
+                    System.exit(1);
+                }
+                if(arrivalStops.size()==0){
+                    System.out.println("Couldn't find arrival stop with name: "+args[1]);
+                    System.exit(1);
+                }*/
+               /* List<Trip> trips = tripCriteria.meetsCriteria(controller.getTripsList(), );
+                if(){
+
+                }*/
+                /*System.out.println(departureStops.size());
+                System.out.println(arrivalStops.size());
+                */
+                tripPlan = controller.getPlanForTrip(null, null, null);
+            } catch (Exception e) {
+                System.err.println("DB consistency problem occurred, terminating");
+                System.exit(1);
+            }
+
+            //return result
+            if (tripPlan != null) {
+                //TODO print plan of trip to user
+            } else {
+                System.out.println("No plan can be generated for specified input. :(");
+            }
+        }
+    }
+
+    private static boolean isInputValid(String[] args){
+        boolean isValid = true;
+        if (args.length != 4) {
+           System.out.println("Please use 4 arguments as input for the program: departure stop, arrival stop, date and time.");
+           return false;
+        }
         try {
-            TripPlannerController controller = new TripPlannerController();
-            tripPlan = controller.getPlanForTrip(null, null, null);
-        } catch (Exception e) {
-            System.err.println("DB consistency problem occurred, terminating");
-            System.exit(1);
+            LocalDate date = LocalDate.parse(args[2], DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        } catch (DateTimeParseException ex) {
+            System.out.println("Argument \"date\" value \""+ args[2] + "\" cannot be parsed as a date. Please use format: yyyy-MM-dd.");
+            isValid = false;
         }
-
-        //return result
-        if (tripPlan != null) {
-            //TODO print plan of trip to user
-        } else {
-            System.out.println("No plan can be generated for specified input. :(");
-        }
+        if(!args[3].matches("([01]?[0-9]|2[0-3]):[0-5][0-9]")){
+            System.out.println("Argument \"time\" value \""+ args[3] + "\" cannot be parsed as time. Please use format: hh:mm.");
+            isValid = false;
+        };
+        return isValid;
     }
 }

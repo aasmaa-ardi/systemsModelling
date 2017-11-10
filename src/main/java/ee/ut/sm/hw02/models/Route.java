@@ -13,7 +13,7 @@ public class Route {
 	private String shortName;
 	private String longName;
     private RouteType type;
-    private List<Trip> trips;
+    private List<Long> trips;
 
 	public Route() {
         trips = new ArrayList<>();
@@ -43,11 +43,11 @@ public class Route {
         this.longName = longName;
     }
 
-    public List<Trip> getTrips() {
+    public List<Long> getTrips() {
         return trips;
     }
 
-    public void setTrips(List<Trip> trips) {
+    public void setTrips(List<Long> trips) {
         this.trips = trips;
     }
 
@@ -59,7 +59,14 @@ public class Route {
         this.type = type;
     }
 
-    public void addTrip(Trip trip) {
+    public void addTrip(Long trip) {
 	    trips.add(trip);
+    }
+
+    @Override
+    public String toString() {
+        return "Route{" +
+                "id='" + id + '\'' +
+                '}';
     }
 }

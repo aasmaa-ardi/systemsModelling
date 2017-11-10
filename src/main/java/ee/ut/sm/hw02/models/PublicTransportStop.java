@@ -14,7 +14,7 @@ public class PublicTransportStop {
 
     public PublicTransportStop() {
         timetable = new Timetable();
-        timetable.setStop(this);
+        timetable.setStop(id);
     }
 
     public Long getId() {
