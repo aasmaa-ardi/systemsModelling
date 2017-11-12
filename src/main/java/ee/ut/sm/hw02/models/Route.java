@@ -67,6 +67,9 @@ public class Route {
     public String toString() {
         return "Route{" +
                 "id='" + id + '\'' +
+                ", shortName='" + shortName + '\'' +
+                ", longName='" + longName + '\'' +
+                ", type=" + type +
                 '}';
     }
 }

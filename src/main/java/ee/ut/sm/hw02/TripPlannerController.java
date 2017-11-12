@@ -43,31 +43,54 @@ public class TripPlannerController {
         System.out.println("All data loaded...");
     }
 
-    public Plan getPlanForTrip(String departureId, String destinationId, String dateString, String departureTimeString) {
+    private PublicTransportStop findStop(String param){
+        PublicTransportStop result = null;
+        try {
+            if (param.startsWith("ID")) {
+                result = stopCriteria.getPublicTransportStopById(stopsList, Long.valueOf(param.substring(2)));
+            } else if (param.startsWith("X") && param.contains("Y")) {
+                String[] parts = param.substring(1).split("Y");
+                result = stopCriteria.getPublicTransportStopByCoordinates(stopsList, Double.valueOf(parts[0]), Double.valueOf(parts[1]));
+            } else {
+                //aadress or name?
+            }
+        } catch(Exception e){
+            System.out.println("There was a problem with user input parameters.");
+        }
+        return result;
+    }
+
+    public Plan getPlanForTrip(String departureString, String destinationString, String dateString, String departureTimeString) {
 
         LocalTime departureTime = LocalTime.parse(departureTimeString, DateTimeFormatter.ofPattern("HH:mm"));
         LocalDate date = LocalDate.parse(dateString, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         int dayOfWeek = date.getDayOfWeek().getValue();
 
+        PublicTransportStop destinationStop = findStop(destinationString);
+        PublicTransportStop departureStop = findStop(departureString);
         //at the moment only expecting to have stop ids as parameters, will make other options available soon
-        PublicTransportStop departureStop = stopCriteria.getPublicTransportStopById(stopsList, Long.valueOf(departureId));
-        PublicTransportStop destinationStop = stopCriteria.getPublicTransportStopById(stopsList, Long.valueOf(destinationId));
 
         //all trip ids, that have both of these stations in right order and are active on the right week day
-        List<Long> trips = tripCriteria.tripsContainingStations(tripsList, departureStop, destinationStop, dayOfWeek);
+        List<Long> tripsLoc = tripCriteria.tripsContainingStations(tripsList, departureStop, destinationStop, dayOfWeek);
 
-        List<Long> tripsAfterDepTime = getTripsAvailableAfterTime(trips, departureStop, departureTime);
+        List<Long> tripsAfterDepTime = getTripsAvailableAfterTime(tripsLoc, departureStop, departureTime);
 
         System.out.println(tripsAfterDepTime.size());
 
         if(tripsAfterDepTime.size() < 1){
             //PART A would return null there, because there will be no direct trips
+            System.out.println("There are no direct trips from departure stop to arrival stop that are available on requested time.");
             return null;
         }
 
+        Long selectedTripId = tripsAfterDepTime.get(0);
         //tripsAfterDepTime will contain all direct trips ordered by departureTime so get(0) will give the first departure
-        calculateTimes(tripsAfterDepTime.get(0), departureStop, destinationStop);
+        List<LocalTime> times = calculateTimes(selectedTripId, departureStop, destinationStop);
+        Route selectedRoute = routes.get(trips.get(selectedTripId).getRouteId());
 
+        //temporary solution for part a
+        System.out.println("The next "+selectedRoute.getType()+" "+selectedRoute.getShortName()
+                +" is leaving at "+times.get(0)+" and arriving at "+times.get(times.size()-1));
         return null;
     }
 

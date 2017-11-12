@@ -1,11 +1,36 @@
 package ee.ut.sm.hw02.enums;
 
 public enum RouteType {
-    BUS_ROUTE,
-    TRAM_ROUTE,
-    TROLLEY_ROUTE,
-    FERRY_ROUTE,
-    RAIL_ROUTE;
+    BUS_ROUTE{
+        @Override
+        public String toString() {
+            return "bus";
+        }
+    },
+    TRAM_ROUTE{
+        @Override
+        public String toString() {
+            return "tram";
+        }
+    },
+    TROLLEY_ROUTE{
+        @Override
+        public String toString() {
+            return "trolley";
+        }
+    },
+    FERRY_ROUTE{
+        @Override
+        public String toString() {
+            return "ferry";
+        }
+    },
+    RAIL_ROUTE{
+        @Override
+        public String toString() {
+            return "train";
+        }
+    };
 
     public static RouteType parseType(int type) {
         switch (type) {
