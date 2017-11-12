@@ -37,19 +37,10 @@ public class Main {
 
         if(isInputValid(args)) {
             //generate plan
-            LocalDate date = LocalDate.parse(args[2], DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-
             Plan tripPlan = null;
-            StopCriteria stopCriteria = new StopCriteria();
-
             try {
                 TripPlannerController controller = new TripPlannerController();
-
-                PublicTransportStop departureStop = stopCriteria.getPublicTransportStopById(controller.getStopsList(), Long.valueOf(args[0]));
-                PublicTransportStop arrivalStop = stopCriteria.getPublicTransportStopById(controller.getStopsList(), Long.valueOf(args[1]));
-
-                LocalTime requestedTime = LocalTime.parse(args[3], DateTimeFormatter.ofPattern("HH:mm"));
-                tripPlan = controller.getPlanForTrip(departureStop.getId(), arrivalStop.getId(), date, requestedTime);
+                tripPlan = controller.getPlanForTrip(args[0], args[1], args[2], args[3]);
             } catch (Exception e) {
                 System.out.println(e);
                 System.err.println("DB consistency problem occurred, terminating");

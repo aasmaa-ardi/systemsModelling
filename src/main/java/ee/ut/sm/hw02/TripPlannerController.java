@@ -46,14 +46,18 @@ public class TripPlannerController {
         System.out.println("All data loaded...");
     }
 
-    public Plan getPlanForTrip(Long departureId, Long destinationId, LocalDate date, LocalTime departureTime) {
+    public Plan getPlanForTrip(String departureId, String destinationId, String dateString, String departureTimeString) {
 
-        PublicTransportStop departureStop = stops.get(departureId);
-        PublicTransportStop destinationStop = stops.get(destinationId);
+        LocalTime departureTime = LocalTime.parse(departureTimeString, DateTimeFormatter.ofPattern("HH:mm"));
+        LocalDate date = LocalDate.parse(dateString, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         int dayOfWeek = date.getDayOfWeek().getValue();
 
+        //at the moment only expecting to have stop ids as parameters, will make other options available soon
+        PublicTransportStop departureStop = stopCriteria.getPublicTransportStopById(stopsList, Long.valueOf(departureId));
+        PublicTransportStop destinationStop = stopCriteria.getPublicTransportStopById(stopsList, Long.valueOf(destinationId));
+
         //all trip ids, that have both of these stations in right order and are active on the right week day
-        List<Long> trips = tripCriteria.tripsContainingStations(tripsList, destinationId, departureId, dayOfWeek);
+        List<Long> trips = tripCriteria.tripsContainingStations(tripsList, destinationStop.getId(), destinationStop.getId(), dayOfWeek);
 
         List<Long> tripsAfterDepTime = getTripsAvailableAfterTime(trips, departureStop, departureTime);
 
