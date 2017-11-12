@@ -16,11 +16,15 @@ public class StopCriteria {
     }
 
     public PublicTransportStop getPublicTransportStopById(List<PublicTransportStop> stops, Long stopId) {
-        return stops.stream().filter(stop -> stop.getId().equals(stopId)).findFirst().get();
+        try{
+            return stops.stream().filter(stop -> stop.getId().equals(stopId)).findFirst().get();
+        } catch (Exception e){return null;}
     }
 
     public PublicTransportStop getPublicTransportStopByCoordinates(List<PublicTransportStop> stops, Double latitude, Double longitude) {
-        return stops.stream().filter(stop -> stop.getLatitude().equals(latitude) && stop.getLongitude().equals(longitude)).findFirst().get();
+        try{
+            return stops.stream().filter(stop -> stop.getLatitude().equals(latitude) && stop.getLongitude().equals(longitude)).findFirst().get();
+        } catch (Exception e){return null;}
     }
 
 }

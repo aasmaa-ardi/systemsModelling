@@ -66,9 +66,17 @@ public class TripPlannerController {
         LocalDate date = LocalDate.parse(dateString, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         int dayOfWeek = date.getDayOfWeek().getValue();
 
-        PublicTransportStop destinationStop = findStop(destinationString);
         PublicTransportStop departureStop = findStop(departureString);
-        //at the moment only expecting to have stop ids as parameters, will make other options available soon
+
+        //if there is no exact match find closest station
+        if(departureStop==null && departureString.startsWith("X")){
+            String[] coords = departureString.substring(1).split("Y");
+            Long id = findClosestStopToCoordinates(Double.valueOf(coords[0]), Double.valueOf(coords[1]));
+            departureStop = stops.get(id);
+            //first leg walking from input coordinates to closest stop
+        }
+
+        PublicTransportStop destinationStop = findStop(destinationString);
 
         //all trip ids, that have both of these stations in right order and are active on the right week day
         List<Long> tripsLoc = tripCriteria.tripsContainingStations(tripsList, departureStop, destinationStop, dayOfWeek);
@@ -92,6 +100,23 @@ public class TripPlannerController {
         System.out.println("The next "+selectedRoute.getType()+" "+selectedRoute.getShortName()
                 +" is leaving at "+times.get(0)+" and arriving at "+times.get(times.size()-1));
         return null;
+    }
+
+    private Long findClosestStopToCoordinates(Double xCoord, Double yCoord){
+        Long closestSoFar = null;
+        Double minSoFar = null;
+        PublicTransportStop result = stopCriteria.getPublicTransportStopByCoordinates(stopsList, xCoord, yCoord);
+        if(result!=null){
+            return result.getId();
+        }
+        for(PublicTransportStop stop: stopsList){
+            Double dist = Math.sqrt(Math.pow(stop.getLongitude()-xCoord, 2.0) + Math.pow(stop.getLatitude()-yCoord, 2.0));
+            if(minSoFar == null || dist < minSoFar){
+                minSoFar = dist;
+                closestSoFar = stop.getId();
+            }
+        }
+        return closestSoFar;
     }
 
     private List<Long> getTripsAvailableAfterTime(List<Long> tripIds, PublicTransportStop depStation, LocalTime time){
@@ -216,7 +241,6 @@ public class TripPlannerController {
                 stop.setLongitude(Double.parseDouble(tokenizer.nextToken()));
                 stops.put(stop.getId(), stop);
                 stopsList.add(stop);
-                //stops2.put(stop.getStopName().toUpperCase(), stop);
             }
         } catch (IOException e) {
             System.err.println("Error while loading stops!");
