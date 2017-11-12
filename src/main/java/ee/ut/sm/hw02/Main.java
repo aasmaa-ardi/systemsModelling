@@ -38,25 +38,18 @@ public class Main {
         if(isInputValid(args)) {
             //generate plan
             LocalDate date = LocalDate.parse(args[2], DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            int dayOfWeek = date.getDayOfWeek().getValue();
+
             Plan tripPlan = null;
             StopCriteria stopCriteria = new StopCriteria();
-            TripCriteria tripCriteria = new TripCriteria();
+
             try {
                 TripPlannerController controller = new TripPlannerController();
 
                 PublicTransportStop departureStop = stopCriteria.getPublicTransportStopById(controller.getStopsList(), Long.valueOf(args[0]));
                 PublicTransportStop arrivalStop = stopCriteria.getPublicTransportStopById(controller.getStopsList(), Long.valueOf(args[1]));
 
-                //all trip ids, that have both of these stations in right order and are active on the right week day
-                List<Long> trips = tripCriteria.tripsContainingStations(controller.getTripsList(), arrivalStop.getId(), departureStop.getId(), dayOfWeek);
                 LocalTime requestedTime = LocalTime.parse(args[3], DateTimeFormatter.ofPattern("HH:mm"));
-                //filter the trips with time
-                List<Long> trips2 = controller.getTripsAvailableAfterTime(trips, departureStop, requestedTime);
-                System.out.println(trips2.size());
-                controller.calculateTimes(trips2.get(0), departureStop, arrivalStop);
-
-               /* tripPlan = controller.getPlanForTrip(null, null, null);*/
+                tripPlan = controller.getPlanForTrip(departureStop.getId(), arrivalStop.getId(), date, requestedTime);
             } catch (Exception e) {
                 System.out.println(e);
                 System.err.println("DB consistency problem occurred, terminating");

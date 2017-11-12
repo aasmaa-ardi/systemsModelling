@@ -1,6 +1,8 @@
 package ee.ut.sm.hw02;
 
 import ee.ut.sm.hw02.enums.RouteType;
+import ee.ut.sm.hw02.filters.StopCriteria;
+import ee.ut.sm.hw02.filters.TripCriteria;
 import ee.ut.sm.hw02.helpers.TimeHelper;
 import ee.ut.sm.hw02.models.*;
 
@@ -9,6 +11,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.text.ParseException;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -21,30 +24,18 @@ public class TripPlannerController {
     private Map<Long, PublicTransportStop> stops;
     private Map<Long, Trip> trips;
     private Map<String, Route> routes;
-    //private Map<String, PublicTransportStop> stops2;
     private List<PublicTransportStop> stopsList;
     private List<Trip> tripsList;
 
-    public List<PublicTransportStop> getStopsList() {
-        return stopsList;
-    }
-
-    public void setStopsList(List<PublicTransportStop> stopsList) {
-        this.stopsList = stopsList;
-    }
-
-    public List<Trip> getTripsList() {
-        return tripsList;
-    }
-
-    public void setTripsList(List<Trip> tripsList) {
-        this.tripsList = tripsList;
-    }
+    private StopCriteria stopCriteria;
+    private TripCriteria tripCriteria;
 
     public TripPlannerController() throws IOException {
         stops = new HashMap<>();
         routes = new HashMap<>();
         trips = new HashMap<>();
+        stopCriteria = new StopCriteria();
+        tripCriteria = new TripCriteria();
         this.stopsList = new ArrayList<>();
         this.tripsList = new ArrayList<>();
         if (! (loadStops() && loadRoutes() && loadTrips() && loadStopTimes() && loadCalendar())) {
@@ -55,24 +46,31 @@ public class TripPlannerController {
         System.out.println("All data loaded...");
     }
 
-    //public boolean doesStopExist(String stopName) {
-    //    return stops2.containsKey(stopName.toUpperCase());
-    //}
+    public Plan getPlanForTrip(Long departureId, Long destinationId, LocalDate date, LocalTime departureTime) {
 
-    public Plan getPlanForTrip(Long departure, Long destination, Date departureTime) {
+        PublicTransportStop departureStop = stops.get(departureId);
+        PublicTransportStop destinationStop = stops.get(destinationId);
+        int dayOfWeek = date.getDayOfWeek().getValue();
 
-        PublicTransportStop departureStop = stops.get(departure);
-        PublicTransportStop destinationStop = stops.get(destination);
+        //all trip ids, that have both of these stations in right order and are active on the right week day
+        List<Long> trips = tripCriteria.tripsContainingStations(tripsList, destinationId, departureId, dayOfWeek);
 
+        List<Long> tripsAfterDepTime = getTripsAvailableAfterTime(trips, departureStop, departureTime);
 
+        System.out.println(tripsAfterDepTime.size());
 
-        //vertices = stops
-        //edges = trip from stop to stop -> uses stop.get
+        if(tripsAfterDepTime.size() < 1){
+            //PART A would return null there, because there will be no direct trips
+            return null;
+        }
+
+        //tripsAfterDepTime will contain all direct trips ordered by departureTime so get(0) will give the first departure
+        calculateTimes(tripsAfterDepTime.get(0), departureStop, destinationStop);
 
         return null;
     }
 
-    public List<Long> getTripsAvailableAfterTime(List<Long> tripIds, PublicTransportStop depStation, LocalTime time){
+    private List<Long> getTripsAvailableAfterTime(List<Long> tripIds, PublicTransportStop depStation, LocalTime time){
         Map<Long, LocalTime> timesMap = depStation.getTimetable().getTimesMap();
 
         //which ones leave after the time we want and go directly to arrival station
@@ -89,12 +87,12 @@ public class TripPlannerController {
         return sortedTrips;
     }
 
-    public List<LocalTime> calculateTimes(Long tripId, PublicTransportStop depStation, PublicTransportStop arrStation){
+    private List<LocalTime> calculateTimes(Long tripId, PublicTransportStop depStation, PublicTransportStop arrStation){
         Trip trip = trips.get(tripId);
         List<Long> stopsLoc = trip.getStops();
         stopsLoc = stopsLoc.subList(stopsLoc.indexOf(depStation.getId()), stopsLoc.indexOf(arrStation.getId()));
         PublicTransportStop nextStop = stops.get(stopsLoc.get(0));
-
+        //how to calculate time?
         return null;
     }
 
@@ -220,7 +218,6 @@ public class TripPlannerController {
                 trip.setDirectionCode(tokenizer.nextToken());
                 trips.put(trip.getTripId(), trip);
                 tripsList.add(trip);
-                /*System.out.println(trip.toString());*/
             }
         } catch (IOException e) {
             System.err.println("Error while loading trips!");
