@@ -23,6 +23,7 @@ public class PublicTransportStop {
 
     public void setId(Long id) {
         this.id = id;
+        timetable.setStop(id);
     }
 
     public Double getLatitude() {

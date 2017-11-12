@@ -24,13 +24,6 @@ import java.util.regex.Pattern;
 public class Main {
 
     public static void main(String[] args) throws ParseException {
-        //get user input
-        try {
-            Class.forName("org.hsqldb.jdbcDriver").newInstance();
-        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
-            e.printStackTrace();
-        }
-
         for(String arg:args){
             System.out.println(arg);
         }
@@ -71,7 +64,7 @@ public class Main {
         if(!args[3].matches("([01]?[0-9]|2[0-3]):[0-5][0-9]")){
             System.out.println("Argument \"time\" value \""+ args[3] + "\" cannot be parsed as time. Please use format: hh:mm.");
             isValid = false;
-        };
+        }
         return isValid;
     }
 }

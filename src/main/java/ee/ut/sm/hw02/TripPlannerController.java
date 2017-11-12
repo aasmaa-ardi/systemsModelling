@@ -9,7 +9,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -55,7 +54,7 @@ public class TripPlannerController {
         PublicTransportStop destinationStop = stopCriteria.getPublicTransportStopById(stopsList, Long.valueOf(destinationId));
 
         //all trip ids, that have both of these stations in right order and are active on the right week day
-        List<Long> trips = tripCriteria.tripsContainingStations(tripsList, departureStop.getId(), destinationStop.getId(), dayOfWeek);
+        List<Long> trips = tripCriteria.tripsContainingStations(tripsList, departureStop, destinationStop, dayOfWeek);
 
         List<Long> tripsAfterDepTime = getTripsAvailableAfterTime(trips, departureStop, departureTime);
 
