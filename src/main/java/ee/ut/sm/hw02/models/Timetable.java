@@ -1,11 +1,12 @@
 package ee.ut.sm.hw02.models;
 
+import java.time.LocalTime;
 import java.util.*;
 
 public class Timetable {
-    private Long stop;
+    private Long stopId;
     private List<Long> trips;
-    private Map<Long, Date> timesMap; //key = tripId, value = arrivalTime;
+    private Map<Long, LocalTime> timesMap; //key = tripId, value = arrivalTime;
     private Map<Long, TravelInfo> infoMap; //key = tripId, value = Travel info containing previous and next stop
 
     public Timetable() {
@@ -15,11 +16,11 @@ public class Timetable {
     }
 
 	public Long getStop() {
-		return stop;
+		return stopId;
 	}
 
-	public void setStop(Long stop) {
-		this.stop = stop;
+	public void setStop(Long stopId) {
+		this.stopId = stopId;
 	}
 
     public List<Long> getTrips() {
@@ -30,11 +31,11 @@ public class Timetable {
         this.trips = trips;
     }
 
-    public Map<Long, Date> getTimesMap() {
+    public Map<Long, LocalTime> getTimesMap() {
         return timesMap;
     }
 
-    public void setTimesMap(Map<Long, Date> timesMap) {
+    public void setTimesMap(Map<Long, LocalTime> timesMap) {
         this.timesMap = timesMap;
     }
 
@@ -46,15 +47,15 @@ public class Timetable {
         this.infoMap = infoMap;
     }
 
-    public void addTrip(Long trip) {
-        trips.add(trip);
+    public void addTrip(Long tripId) {
+        trips.add(tripId);
     }
 
-    public void addTime(Long tripId, Date time) {
+    public void addTime(Long tripId, LocalTime time) {
         timesMap.put(tripId, time);
     }
 
-    public Date getTime(Long tripId) {
+    public LocalTime getTime(Long tripId) {
         return timesMap.get(tripId);
     }
 

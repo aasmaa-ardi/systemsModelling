@@ -12,6 +12,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
@@ -43,35 +44,21 @@ public class Main {
             TripCriteria tripCriteria = new TripCriteria();
             try {
                 TripPlannerController controller = new TripPlannerController();
+
                 PublicTransportStop departureStop = stopCriteria.getPublicTransportStopById(controller.getStopsList(), Long.valueOf(args[0]));
                 PublicTransportStop arrivalStop = stopCriteria.getPublicTransportStopById(controller.getStopsList(), Long.valueOf(args[1]));
-                System.out.println(departureStop.toString());
-                System.out.println(arrivalStop.toString());
 
-                //direct trips
-                List<Trip> trips = tripCriteria.meetsCriteria(controller.getTripsList(), arrivalStop.getId(), departureStop.getId(), dayOfWeek);
-                System.out.println(trips.size());
-                System.out.println(controller.getTripsList().size());
-                
-                /* List<PublicTransportStop> departureStops = stopCriteria.meetsCriteria(controller.getStopsList(), args[0]);
-                List<PublicTransportStop> arrivalStops = stopCriteria.meetsCriteria(controller.getStopsList(), args[1]);
-                if(departureStops.size()==0){
-                    System.out.println("Couldn't find departure stop with name: "+args[0]);
-                    System.exit(1);
-                }
-                if(arrivalStops.size()==0){
-                    System.out.println("Couldn't find arrival stop with name: "+args[1]);
-                    System.exit(1);
-                }*/
-               /* List<Trip> trips = tripCriteria.meetsCriteria(controller.getTripsList(), );
-                if(){
+                //all trip ids, that have both of these stations in right order and are active on the right week day
+                List<Long> trips = tripCriteria.tripsContainingStations(controller.getTripsList(), arrivalStop.getId(), departureStop.getId(), dayOfWeek);
+                LocalTime requestedTime = LocalTime.parse(args[3], DateTimeFormatter.ofPattern("HH:mm"));
+                //filter the trips with time
+                List<Long> trips2 = controller.getTripsAvailableAfterTime(trips, departureStop, requestedTime);
+                System.out.println(trips2.size());
+                controller.calculateTimes(trips2.get(0), departureStop, arrivalStop);
 
-                }*/
-                /*System.out.println(departureStops.size());
-                System.out.println(arrivalStops.size());
-                */
-                tripPlan = controller.getPlanForTrip(null, null, null);
+               /* tripPlan = controller.getPlanForTrip(null, null, null);*/
             } catch (Exception e) {
+                System.out.println(e);
                 System.err.println("DB consistency problem occurred, terminating");
                 System.exit(1);
             }

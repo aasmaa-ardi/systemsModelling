@@ -7,11 +7,10 @@ import java.util.stream.Collectors;
 
 public class TripCriteria {
 
-    public List<Trip> meetsCriteria(List<Trip> trips, Long arrStationId, Long depStationId, int weekdayInt) {
+    public List<Long> tripsContainingStations(List<Trip> trips, Long arrStationId, Long depStationId, int weekdayInt) {
         return trips.stream()
-                .filter(trip -> trip.getStops().contains(arrStationId) && trip.getStops().contains(arrStationId)
-                && (trip.getStops().indexOf(arrStationId)>trip.getStops().indexOf(depStationId))
-                && trip.getDays()[weekdayInt-1])
-                .collect(Collectors.toList());
+                .filter(trip -> trip.getStops().contains(arrStationId) && trip.getStops().contains(depStationId)
+                //&& (trip.getStops().indexOf(arrStationId)>trip.getStops().indexOf(depStationId))
+                && trip.getDays()[weekdayInt-1]).map(Trip::getTripId).collect(Collectors.toList());
     }
 }

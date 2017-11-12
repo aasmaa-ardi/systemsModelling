@@ -49,6 +49,14 @@ public class PublicTransportStop {
         this.stopName = stopName;
     }
 
+    @Override
+    public String toString() {
+        return "PublicTransportStop{" +
+                "id=" + id +
+                ", stopName='" + stopName + '\'' +
+                '}';
+    }
+
     public Timetable getTimetable() {
         return timetable;
     }
