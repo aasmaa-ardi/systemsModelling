@@ -9,7 +9,7 @@ public class Trip {
     private Long serviceId;
     private String directionCode;
     private String routeId;
-    private LinkedList<Long> stops;
+    private LinkedList<PublicTransportStop> stops;
     private boolean[] days;
 
     public Trip() {
@@ -48,11 +48,11 @@ public class Trip {
         this.directionCode = directionCode;
     }
 
-    public LinkedList<Long> getStops() {
+    public LinkedList<PublicTransportStop> getStops() {
         return stops;
     }
 
-    public void setStops(LinkedList<Long> stops) {
+    public void setStops(LinkedList<PublicTransportStop> stops) {
         this.stops = stops;
     }
 

@@ -57,6 +57,18 @@ public class PublicTransportStop {
                 '}';
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        } else if (! (obj instanceof PublicTransportStop)) {
+            return false;
+        } else {
+            PublicTransportStop pts = (PublicTransportStop) obj;
+            return this.id.equals(pts.id);
+        }
+    }
+
     public Timetable getTimetable() {
         return timetable;
     }

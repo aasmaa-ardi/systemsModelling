@@ -3,20 +3,18 @@ package ee.ut.sm.hw02;
 import ee.ut.sm.hw02.enums.RouteType;
 import ee.ut.sm.hw02.filters.StopCriteria;
 import ee.ut.sm.hw02.filters.TripCriteria;
-import ee.ut.sm.hw02.helpers.TimeHelper;
 import ee.ut.sm.hw02.models.*;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.text.ParseException;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
-import java.util.Date;
 import java.util.stream.Collectors;
 
 public class TripPlannerController {
@@ -57,7 +55,7 @@ public class TripPlannerController {
         PublicTransportStop destinationStop = stopCriteria.getPublicTransportStopById(stopsList, Long.valueOf(destinationId));
 
         //all trip ids, that have both of these stations in right order and are active on the right week day
-        List<Long> trips = tripCriteria.tripsContainingStations(tripsList, destinationStop.getId(), destinationStop.getId(), dayOfWeek);
+        List<Long> trips = tripCriteria.tripsContainingStations(tripsList, departureStop.getId(), destinationStop.getId(), dayOfWeek);
 
         List<Long> tripsAfterDepTime = getTripsAvailableAfterTime(trips, departureStop, departureTime);
 
@@ -80,7 +78,7 @@ public class TripPlannerController {
         //which ones leave after the time we want and go directly to arrival station
         Map<Long, LocalTime> tripsLeavingAfter = timesMap.entrySet()
                 .stream().filter(p -> (p.getValue().isAfter(time)) && tripIds.contains(p.getKey()))
-                .collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
         //System.out.println(tripsLeavingAfter);
         //sort the trips by time
@@ -92,27 +90,28 @@ public class TripPlannerController {
     }
 
     private List<LocalTime> calculateTimes(Long tripId, PublicTransportStop depStation, PublicTransportStop arrStation){
-        Trip trip = trips.get(tripId);
-        List<Long> stopsLoc = trip.getStops();
-        stopsLoc = stopsLoc.subList(stopsLoc.indexOf(depStation.getId()), stopsLoc.indexOf(arrStation.getId()));
-        PublicTransportStop nextStop = stops.get(stopsLoc.get(0));
-        //how to calculate time?
-        return null;
+        List<LocalTime> times = new ArrayList<>();
+        PublicTransportStop actualStop = depStation;
+        while (! actualStop.equals(arrStation)) {
+            times.add(actualStop.getTimetable().getTime(tripId));
+            actualStop = actualStop.getTimetable().getInfoMap().get(tripId).getNextStop();
+        }
+        return times;
     }
 
     // INITIALIZATION METHODS FOR READING FROM FILES
 
     private void setStopsInfo() {
         for (Trip trip: trips.values()) {
-            List<Long> stopsList = trip.getStops();
+            List<PublicTransportStop> stopsList = trip.getStops();
             for (int i = 1; i < stopsList.size() -1; i++) {
-                PublicTransportStop actualStop = stops.get(stopsList.get(i-1));
-                PublicTransportStop nextStop = stops.get(stopsList.get(i));
+                PublicTransportStop actualStop = stopsList.get(i-1);
+                PublicTransportStop nextStop = stopsList.get(i);
                 TravelInfo info = new TravelInfo(actualStop, nextStop, trip.getTripId());
 
                 actualStop.getTimetable().addInfo(trip.getTripId(), info);
             }
-            PublicTransportStop lastStop = stops.get(trip.getStops().getLast());
+            PublicTransportStop lastStop = trip.getStops().getLast();
             TravelInfo info = new TravelInfo(lastStop, null, null);
             lastStop.getTimetable().addInfo(trip.getTripId(), info);
         }
@@ -159,7 +158,7 @@ public class TripPlannerController {
                 PublicTransportStop stop = stops.get(stopId);
                 Trip trip = trips.get(tripId);
                 Timetable timetable = stop.getTimetable();
-                trip.getStops().addLast(stop.getId());
+                trip.getStops().addLast(stops.get(stopId));
                 timetable.addTrip(tripId); //05:39:00
                 if(depTime.startsWith("24")){
                     depTime = "00"+depTime.substring(2);

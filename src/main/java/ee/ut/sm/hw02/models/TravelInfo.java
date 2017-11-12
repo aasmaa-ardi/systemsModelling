@@ -1,7 +1,5 @@
 package ee.ut.sm.hw02.models;
 
-import ee.ut.sm.hw02.helpers.TimeHelper;
-
 import java.time.Duration;
 import java.time.LocalTime;
 
