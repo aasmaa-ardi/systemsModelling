@@ -42,6 +42,7 @@ public class Main {
 
             //return result
             if (tripPlan != null) {
+                System.out.println(tripPlan.toString());
                 //TODO print plan of trip to user
             } else {
                 System.out.println("No plan can be generated for specified input. :(");

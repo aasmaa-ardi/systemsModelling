@@ -58,4 +58,15 @@ public class Plan {
     public void setApproxArrivalTime(LocalDateTime approxArrivalTime) {
         this.approxArrivalTime = approxArrivalTime;
     }
+
+    @Override
+    public String toString() {
+        return "Plan{" +
+                "departureStop=" + departureStop.getStopName() +
+                ", destinationStop=" + destinationStop.getStopName() +
+                ", departureTime=" + departureTime +
+                ", approxArrivalTime=" + approxArrivalTime +
+                ", travelLegs=" + travelLegs +
+                '}';
+    }
 }

@@ -39,4 +39,14 @@ public class TravelLeg {
 	public void setDestination(Long destination) {
 		this.destination = destination;
 	}
+
+	@Override
+	public String toString() {
+		return "TravelLeg{" +
+				"travelType=" + travelType +
+				", route='" + route + '\'' +
+				", departure Stop Id =" + source +
+				", destination Stop Id =" + destination +
+				'}';
+	}
 }
