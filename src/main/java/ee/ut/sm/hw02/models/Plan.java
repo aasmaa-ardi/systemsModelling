@@ -2,6 +2,8 @@ package ee.ut.sm.hw02.models; /**
  * @(#) Plan.java
  */
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -9,19 +11,19 @@ import java.util.List;
 public class Plan {
     private PublicTransportStop departureStop;
     private PublicTransportStop destinationStop;
-    private Date departureTime;
-    private Date approxArrivalTime;
+    private LocalDateTime departureTime;
+    private LocalDateTime approxArrivalTime;
     private List<TravelLeg> travelLegs;
 
     public Plan() {
         travelLegs = new ArrayList<>();
     }
 
-    public Date getDepartureTime() {
+    public LocalDateTime getDepartureTime() {
         return departureTime;
     }
 
-    public void setDepartureTime(Date departureTime) {
+    public void setDepartureTime(LocalDateTime departureTime) {
         this.departureTime = departureTime;
     }
 
@@ -49,11 +51,11 @@ public class Plan {
         this.travelLegs = travelLegs;
     }
 
-    public Date getApproxArrivalTime() {
+    public LocalDateTime getApproxArrivalTime() {
         return approxArrivalTime;
     }
 
-    public void setApproxArrivalTime(Date approxArrivalTime) {
+    public void setApproxArrivalTime(LocalDateTime approxArrivalTime) {
         this.approxArrivalTime = approxArrivalTime;
     }
 }

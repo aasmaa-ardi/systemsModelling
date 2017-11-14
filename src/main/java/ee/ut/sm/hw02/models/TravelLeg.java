@@ -4,15 +4,15 @@ import ee.ut.sm.hw02.enums.TravelType;
 
 public class TravelLeg {
 	private TravelType travelType;
-    private Long route;
+    private String route;
     private Long source;
 	private Long destination;
 
-	public Long getRoute() {
+	public String getRoute() {
 		return route;
 	}
 
-	public void setRoute(Long route) {
+	public void setRoute(String route) {
 		this.route = route;
 	}
 

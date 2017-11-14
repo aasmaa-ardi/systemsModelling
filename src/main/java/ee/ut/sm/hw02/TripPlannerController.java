@@ -1,6 +1,7 @@
 package ee.ut.sm.hw02;
 
 import ee.ut.sm.hw02.enums.RouteType;
+import ee.ut.sm.hw02.enums.TravelType;
 import ee.ut.sm.hw02.filters.StopCriteria;
 import ee.ut.sm.hw02.filters.TripCriteria;
 import ee.ut.sm.hw02.models.*;
@@ -9,7 +10,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -23,7 +26,7 @@ public class TripPlannerController {
     private Map<String, Route> routes;
     private List<PublicTransportStop> stopsList;
     private List<Trip> tripsList;
-
+    private Plan plan;
     private StopCriteria stopCriteria;
     private TripCriteria tripCriteria;
 
@@ -35,6 +38,7 @@ public class TripPlannerController {
         tripCriteria = new TripCriteria();
         this.stopsList = new ArrayList<>();
         this.tripsList = new ArrayList<>();
+        plan = new Plan();
         if (! (loadStops() && loadRoutes() && loadTrips() && loadStopTimes() && loadCalendar())) {
             throw new IOException("Error while loading files");
         }
@@ -47,12 +51,11 @@ public class TripPlannerController {
         PublicTransportStop result = null;
         try {
             if (param.startsWith("ID")) {
-                result = stopCriteria.getPublicTransportStopById(stopsList, Long.valueOf(param.substring(2)));
+                Long stopId = Long.valueOf(param.substring(2));
+                result = stops.get(stopId);
             } else if (param.startsWith("X") && param.contains("Y")) {
                 String[] parts = param.substring(1).split("Y");
                 result = stopCriteria.getPublicTransportStopByCoordinates(stopsList, Double.valueOf(parts[0]), Double.valueOf(parts[1]));
-            } else {
-                //aadress or name?
             }
         } catch(Exception e){
             System.out.println("There was a problem with user input parameters.");
@@ -61,45 +64,87 @@ public class TripPlannerController {
     }
 
     public Plan getPlanForTrip(String departureString, String destinationString, String dateString, String departureTimeString) {
-
         LocalTime departureTime = LocalTime.parse(departureTimeString, DateTimeFormatter.ofPattern("HH:mm"));
         LocalDate date = LocalDate.parse(dateString, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         int dayOfWeek = date.getDayOfWeek().getValue();
-
-        PublicTransportStop departureStop = findStop(departureString);
-
-        //if there is no exact match find closest station
-        if(departureStop==null && departureString.startsWith("X")){
-            String[] coords = departureString.substring(1).split("Y");
-            Long id = findClosestStopToCoordinates(Double.valueOf(coords[0]), Double.valueOf(coords[1]));
-            departureStop = stops.get(id);
-            //first leg walking from input coordinates to closest stop
-        }
-
-        PublicTransportStop destinationStop = findStop(destinationString);
-
+        plan.setDestinationStop(findStop(destinationString));
+        plan.setDepartureStop(findStop(departureString));
+        plan.setDepartureTime(LocalDateTime.of(date, departureTime));
         //all trip ids, that have both of these stations in right order and are active on the right week day
-        List<Long> tripsLoc = tripCriteria.tripsContainingStations(tripsList, departureStop, destinationStop, dayOfWeek);
-
-        List<Long> tripsAfterDepTime = getTripsAvailableAfterTime(tripsLoc, departureStop, departureTime);
-
-        System.out.println(tripsAfterDepTime.size());
+        List<Long> tripsLoc = tripCriteria.tripsContainingStations(tripsList, plan.getDepartureStop(), plan.getDestinationStop(), dayOfWeek);
+        List<Long> tripsAfterDepTime = getTripsAvailableAfterTime(tripsLoc, plan.getDepartureStop(), departureTime);
 
         if(tripsAfterDepTime.size() < 1){
-            //PART A would return null there, because there will be no direct trips
-            System.out.println("There are no direct trips from departure stop to arrival stop that are available on requested time.");
-            return null;
+            getNotDirectRoute();
+            return plan;
         }
 
         Long selectedTripId = tripsAfterDepTime.get(0);
-        //tripsAfterDepTime will contain all direct trips ordered by departureTime so get(0) will give the first departure
-        List<LocalTime> times = calculateTimes(selectedTripId, departureStop, destinationStop);
-        Route selectedRoute = routes.get(trips.get(selectedTripId).getRouteId());
 
+        //tripsAfterDepTime will contain all direct trips ordered by departureTime so get(0) will give the first departure
+        List<LocalTime> times = calculateTimes(selectedTripId, plan.getDepartureStop(), plan.getDestinationStop());
+        Route selectedRoute = routes.get(trips.get(selectedTripId).getRouteId());
+        ArrayList<TravelLeg> legs = new ArrayList<>();
+        TravelLeg leg = new TravelLeg();
+        leg.setRoute(selectedRoute.getId());
+        leg.setTravelType(TravelType.PUBLIC_TRANSPORT);
+        leg.setSource(plan.getDepartureStop().getId());
+        leg.setDestination(plan.getDestinationStop().getId());
+        legs.add(leg);
+        plan.setTravelLegs(legs);
+        plan.setApproxArrivalTime(plan.getDepartureTime().plusMinutes(minutesToDestStop(leg, selectedTripId, plan.getDepartureTime())));
         //temporary solution for part a
-        System.out.println("The next "+selectedRoute.getType()+" "+selectedRoute.getShortName()
-                +" is leaving at "+times.get(0)+" and arriving at "+times.get(times.size()-1));
-        return null;
+        //System.out.println("The next "+selectedRoute.getType()+" "+selectedRoute.getShortName()
+        //        +" is leaving at "+times.get(0)+" and arriving at "+times.get(times.size()-1));
+        return plan;
+    }
+
+    private void getNotDirectRoute(){
+        List<Long> sortedTripIds = tripCriteria.tripsContainingDepStation(tripsList, plan.getDepartureStop(), plan.getDepartureTime());
+        List<PublicTransportStop> allDirectlyAccStops = new ArrayList<>();
+        for(Long tripId:sortedTripIds){
+            allDirectlyAccStops.addAll(trips.get(tripId).getStops().stream().filter(astop -> astop.getTimetable().getTimesMap().get(tripId).isAfter(plan.getDepartureTime().toLocalTime())).collect(Collectors.toList()));
+        }
+        PublicTransportStop closestStop = closestStopToDestination(allDirectlyAccStops);
+        List<Long> lTrips = tripCriteria.sortedTripsContainingStops(tripsList, plan.getDestinationStop(), closestStopToDestination(allDirectlyAccStops), plan.getDepartureTime());
+        List<TravelLeg> travelLegs = new ArrayList<>();
+        TravelLeg travelLeg = new TravelLeg();
+        travelLeg.setDestination(closestStop.getId());
+        travelLeg.setSource(plan.getDepartureStop().getId());
+        travelLeg.setTravelType(TravelType.PUBLIC_TRANSPORT);
+        travelLeg.setRoute(trips.get(lTrips.get(0)).getRouteId());
+        travelLegs.add(travelLeg);
+        long addMinutes = minutesToDestStop(travelLeg, lTrips.get(0), plan.getDepartureTime());
+        TravelLeg walkToDest = new TravelLeg();
+        walkToDest.setDestination(plan.getDestinationStop().getId());
+        walkToDest.setSource(closestStop.getId());
+        walkToDest.setTravelType(TravelType.WALK);
+        walkToDest.setRoute("Walking from "+closestStop.getStopName()+" to "+plan.getDestinationStop().getStopName());
+        travelLegs.add(walkToDest);
+        addMinutes += distBetweenTwoStopsWalkingMin(stops.get(closestStop.getId()), stops.get(plan.getDestinationStop().getId()));
+        plan.setTravelLegs(travelLegs);
+        plan.setApproxArrivalTime(plan.getDepartureTime().plusMinutes(addMinutes));
+    }
+
+    private long distBetweenTwoStopsWalkingMin(PublicTransportStop fromStop, PublicTransportStop toStop){
+        return Math.round(distBetweenTwoStops(fromStop, toStop)*110*10);
+    }
+
+    private double distBetweenTwoStops(PublicTransportStop fromStop, PublicTransportStop toStop){
+        return Math.abs(Math.sqrt(Math.pow(fromStop.getLongitude()-toStop.getLongitude(), 2.0) + Math.pow(fromStop.getLatitude()-toStop.getLatitude(), 2.0)));
+    }
+
+    private PublicTransportStop closestStopToDestination(List<PublicTransportStop> allDirectlyAccStops) {
+        PublicTransportStop closestSoFar = null;
+        Double minDistSoFar = null;
+        for(PublicTransportStop publicTransportStop: allDirectlyAccStops){
+            Double dist = distBetweenTwoStops(plan.getDestinationStop(), publicTransportStop);
+            if(minDistSoFar == null || dist < minDistSoFar){
+                minDistSoFar = dist;
+                closestSoFar = publicTransportStop;
+            }
+        }
+        return closestSoFar;
     }
 
     private Long findClosestStopToCoordinates(Double xCoord, Double yCoord){
@@ -127,12 +172,10 @@ public class TripPlannerController {
                 .stream().filter(p -> (p.getValue().isAfter(time)) && tripIds.contains(p.getKey()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-        //System.out.println(tripsLeavingAfter);
         //sort the trips by time
         List<Long> sortedTrips = tripsLeavingAfter.entrySet().stream()
                 .sorted(Comparator.comparing(Map.Entry::getValue)).map(Map.Entry::getKey)
                 .collect(Collectors.toList());
-        System.out.println(tripsLeavingAfter.get(sortedTrips.get(0))+" "+tripsLeavingAfter.get(sortedTrips.get(10)));
         return sortedTrips;
     }
 
@@ -144,6 +187,20 @@ public class TripPlannerController {
             actualStop = actualStop.getTimetable().getInfoMap().get(tripId).getNextStop();
         }
         return times;
+    }
+
+    private long minutesToDestStop(TravelLeg travelLeg, Long tripId, LocalDateTime timeNoW){
+        List<LocalTime> times = new ArrayList<>();
+        PublicTransportStop actualStop = stops.get(travelLeg.getDestination());
+        while (! actualStop.equals(stops.get(travelLeg.getDestination()))) {
+            times.add(actualStop.getTimetable().getTime(tripId));
+            actualStop = actualStop.getTimetable().getInfoMap().get(tripId).getNextStop();
+        }
+        if(times.size()<2){
+            System.out.println("ERROR minutesToDestStop should have contained times");
+            return 0;
+        }
+        return Duration.between(timeNoW.toLocalTime(), times.get(times.size()-1)).toMinutes();
     }
 
     // INITIALIZATION METHODS FOR READING FROM FILES
