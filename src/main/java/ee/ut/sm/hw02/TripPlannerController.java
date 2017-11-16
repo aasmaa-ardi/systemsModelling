@@ -179,23 +179,6 @@ public class TripPlannerController {
         return closestSoFar;
     }
 
-    private Long findClosestStopToCoordinates(Double xCoord, Double yCoord) {
-        Long closestSoFar = null;
-        Double minSoFar = null;
-        PublicTransportStop result = stopCriteria.getPublicTransportStopByCoordinates(stopsList, xCoord, yCoord);
-        if (result != null) {
-            return result.getId();
-        }
-        for (PublicTransportStop stop : stopsList) {
-            Double dist = Math.sqrt(Math.pow(stop.getLongitude() - xCoord, 2.0) + Math.pow(stop.getLatitude() - yCoord, 2.0));
-            if (minSoFar == null || dist < minSoFar) {
-                minSoFar = dist;
-                closestSoFar = stop.getId();
-            }
-        }
-        return closestSoFar;
-    }
-
     // INITIALIZATION METHODS FOR READING FROM FILES
 
     private void setStopsInfo() {
