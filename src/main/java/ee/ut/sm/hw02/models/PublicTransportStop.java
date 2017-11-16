@@ -1,9 +1,5 @@
 package ee.ut.sm.hw02.models;
 
-/**
- * @(#) PublicTransportStop.java
- */
-
 public class PublicTransportStop {
 
 	private Long id;
@@ -14,7 +10,7 @@ public class PublicTransportStop {
 
     public PublicTransportStop() {
         timetable = new Timetable();
-        timetable.setStop(id);
+        timetable.setStop(this);
     }
 
     public Long getId() {
@@ -23,7 +19,6 @@ public class PublicTransportStop {
 
     public void setId(Long id) {
         this.id = id;
-        timetable.setStop(id);
     }
 
     public Double getLatitude() {

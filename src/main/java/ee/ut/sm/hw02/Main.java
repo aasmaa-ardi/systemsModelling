@@ -1,25 +1,11 @@
 package ee.ut.sm.hw02;
 
-import ee.ut.sm.hw02.filters.StopCriteria;
-import ee.ut.sm.hw02.filters.TripCriteria;
 import ee.ut.sm.hw02.models.Plan;
-import ee.ut.sm.hw02.models.PublicTransportStop;
-import ee.ut.sm.hw02.models.Trip;
 
-import java.sql.SQLException;
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Scanner;
-import java.util.regex.Pattern;
 
 public class Main {
 
@@ -31,14 +17,13 @@ public class Main {
         if(isInputValid(args)) {
             //generate plan
             Plan tripPlan = null;
+            TripPlannerController controller = null;
             try {
-                TripPlannerController controller = new TripPlannerController();
-                tripPlan = controller.getPlanForTrip(args[0], args[1], args[2], args[3]);
+                controller = new TripPlannerController();
             } catch (Exception e) {
-                System.out.println(e);
-                System.err.println("DB consistency problem occurred, terminating");
                 System.exit(1);
             }
+            tripPlan = controller.getPlanForTrip(args[0], args[1], args[2], args[3]);
 
             //return result
             if (tripPlan != null) {
