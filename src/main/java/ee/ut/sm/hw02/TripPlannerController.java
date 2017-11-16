@@ -70,8 +70,8 @@ public class TripPlannerController {
             prev.put(stop, null);
             usedTrips.put(stop, null);
         }
-
         dist.put(departure, departureTime);
+
         while (! unfinishedStops.isEmpty()) {
             PublicTransportStop nearestStop = getStopWithMinDist(dist, unfinishedStops);
             unfinishedStops.remove(nearestStop);
@@ -83,6 +83,7 @@ public class TripPlannerController {
                     iter.remove();
                 }
             }
+
             Map<Long, TravelInfo> infoMap = nearestStop.getTimetable().getInfoMap();
             Map<Long, OwnTime> timesMap = nearestStop.getTimetable().getTimesMap();
             for(Long tripId: tripsOfStop) {
@@ -91,14 +92,16 @@ public class TripPlannerController {
                     continue;
                 }
                 TravelInfo info = infoMap.get(tripId); //if stop is last we cannot get further
-                if (info.getNextStop() == null) {
+                PublicTransportStop nextStop = info.getNextStop();
+                if (nextStop == null) {
                     continue;
                 }
-                OwnTime arrivalTime = info.getNextStop().getTimetable().getTime(tripId);
-                if (arrivalTime.isBefore(dist.get(info.getNextStop()))) {
-                    dist.replace(info.getNextStop(), info.getNextStop().getTimetable().getTime(tripId));
-                    prev.replace(info.getNextStop(), nearestStop);
-                    usedTrips.replace(info.getNextStop(), tripId);
+
+                OwnTime arrivalTime = info.getArrivalTime();
+                if (arrivalTime.isBefore(dist.get(nextStop))) {
+                    dist.put(nextStop, arrivalTime);
+                    prev.put(nextStop, nearestStop);
+                    usedTrips.put(nextStop, tripId);
                 }
             }
         }
@@ -113,15 +116,15 @@ public class TripPlannerController {
             travelLeg.setUsedTrip(trips.get(usedTrips.get(actualStop)));
             travelLeg.setRoute(travelLeg.getUsedTrip().getRoute());
             travelLeg.setTravelType(TravelType.PUBLIC_TRANSPORT);
+
             travelLeg.setDestination(actualStop);
-            travelLeg.setArrivalTime(dist.get(actualStop));
             Long usedTrip = usedTrips.get(actualStop);
+            travelLeg.setArrivalTime(actualStop.getTimetable().getInfoMap().get(usedTrip).getDepartureTime());
             while (usedTrip.equals(usedTrips.get(prevStop))) {
-                actualStop = prevStop;
                 prevStop = prev.get(prevStop);
             }
             travelLeg.setSource(prevStop);
-            travelLeg.setDepartureTime(dist.get(actualStop));
+            travelLeg.setDepartureTime(prevStop.getTimetable().getInfoMap().get(usedTrip).getDepartureTime());
             travelLegs.addFirst(travelLeg);
 
             actualStop = prevStop;
