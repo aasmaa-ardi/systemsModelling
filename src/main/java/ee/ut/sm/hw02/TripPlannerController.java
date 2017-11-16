@@ -76,6 +76,13 @@ public class TripPlannerController {
             PublicTransportStop nearestStop = getStopWithMinDist(dist, unfinishedStops);
             unfinishedStops.remove(nearestStop);
 
+            //for(PublicTransportStop stop: stops) {
+            //  OwnTime walkTime = computeWalk(nearestStop, stop)
+            //  if (dist.get(nearestStop) + walkTime < dist.get(stop)) {
+            //      dis.get(stop) = dist.get(nearestStop) + walkTime
+            //  }
+            //}
+
             List<Long> tripsOfStop = nearestStop.getTimetable().getTrips();
 
             Iterator<Long> iter = tripsOfStop.iterator(); //remove all trips that are not taken on the input day
@@ -167,11 +174,11 @@ public class TripPlannerController {
     }
 
     private long distBetweenTwoStopsWalkingMin(PublicTransportStop fromStop, PublicTransportStop toStop){
-        return Math.round(distBetweenTwoStops(fromStop, toStop)*110*10);
+        return Math.round(distBetweenTwoStops(fromStop, toStop) * 110 * 10);
     }
 
     private double distBetweenTwoStops(PublicTransportStop fromStop, PublicTransportStop toStop){
-        return Math.abs(Math.sqrt(Math.pow(fromStop.getLongitude()-toStop.getLongitude(), 2.0) + Math.pow(fromStop.getLatitude()-toStop.getLatitude(), 2.0)));
+        return Math.abs(Math.sqrt(Math.pow(fromStop.getLongitude() - toStop.getLongitude(), 2.0) + Math.pow(fromStop.getLatitude() - toStop.getLatitude(), 2.0)));
     }
 
     private PublicTransportStop closestStopToDestination(List<PublicTransportStop> allDirectlyAccStops) {
