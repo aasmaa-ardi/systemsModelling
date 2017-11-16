@@ -75,8 +75,10 @@ public class TripPlannerController {
         while (! unfinishedStops.isEmpty()) {
             PublicTransportStop nearestStop = getStopWithMinDist(dist, unfinishedStops);
             unfinishedStops.remove(nearestStop);
+
             List<Long> tripsOfStop = nearestStop.getTimetable().getTrips();
-            Iterator<Long> iter = tripsOfStop.iterator();
+
+            Iterator<Long> iter = tripsOfStop.iterator(); //remove all trips that are not taken on the input day
             while (iter.hasNext()) {
                 Trip trip = trips.get(iter.next());
                 if (! trip.getDays()[weekDay]) {
@@ -86,18 +88,19 @@ public class TripPlannerController {
 
             Map<Long, TravelInfo> infoMap = nearestStop.getTimetable().getInfoMap();
             Map<Long, OwnTime> timesMap = nearestStop.getTimetable().getTimesMap();
-            for(Long tripId: tripsOfStop) {
-                OwnTime tripTime = timesMap.get(tripId); //departure from nearestStop for actual trip
-                if (tripTime.isBefore(dist.get(nearestStop))) { //dist.get(nearestStop) == actualTime
+
+            for(Long tripId: tripsOfStop) { //try every connection to travel to another stop
+                OwnTime tripTime = timesMap.get(tripId); //departure time from nearestStop for actual trip
+                if (tripTime.isBefore(dist.get(nearestStop))) { //if trip is before time that we have we cannot take it
                     continue;
                 }
-                TravelInfo info = infoMap.get(tripId); //if stop is last we cannot get further
+                TravelInfo info = infoMap.get(tripId);
                 PublicTransportStop nextStop = info.getNextStop();
-                if (nextStop == null) {
+                if (nextStop == null) { //if stop is last we cannot get further, that means nextStop == null
                     continue;
                 }
 
-                OwnTime arrivalTime = info.getArrivalTime();
+                OwnTime arrivalTime = info.getArrivalTime(); //arrivalTime to nextStop
                 if (arrivalTime.isBefore(dist.get(nextStop))) {
                     dist.put(nextStop, arrivalTime);
                     prev.put(nextStop, nearestStop);
@@ -112,6 +115,7 @@ public class TripPlannerController {
         PublicTransportStop prevStop = prev.get(actualStop);
         LinkedList<TravelLeg> travelLegs = new LinkedList<>();
         while (prevStop != null) {
+            //while trip has same id, we can consider it as one travelLeg
             TravelLeg travelLeg = new TravelLeg();
             travelLeg.setUsedTrip(trips.get(usedTrips.get(actualStop)));
             travelLeg.setRoute(travelLeg.getUsedTrip().getRoute());
@@ -123,6 +127,7 @@ public class TripPlannerController {
             while (usedTrip.equals(usedTrips.get(prevStop))) {
                 prevStop = prev.get(prevStop);
             }
+            //id of used trip has changed, this is the end of the travel leg
             travelLeg.setSource(prevStop);
             travelLeg.setDepartureTime(prevStop.getTimetable().getInfoMap().get(usedTrip).getDepartureTime());
             travelLegs.addFirst(travelLeg);
