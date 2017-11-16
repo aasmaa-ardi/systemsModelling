@@ -76,6 +76,17 @@ public class TripPlannerController {
             PublicTransportStop nearestStop = getStopWithMinDist(dist, unfinishedStops);
             unfinishedStops.remove(nearestStop);
 
+            for(PublicTransportStop stop: unfinishedStops){
+                int minutes = computeWalk(stop, nearestStop);
+                //max walking time 60 minutes
+                if(minutes<60){
+                    OwnTime walkEnd = new OwnTime(dist.get(nearestStop).addMinutes(minutes));
+                    if( walkEnd.isBefore(dist.get(stop))) {
+                        dist.put(stop, walkEnd);
+                    }
+                }
+            }
+
             List<Long> tripsOfStop = nearestStop.getTimetable().getTrips();
 
             Iterator<Long> iter = tripsOfStop.iterator(); //remove all trips that are not taken on the input day
@@ -166,8 +177,8 @@ public class TripPlannerController {
         return dijkstra(plan.getDepartureStop(), plan.getDestinationStop(), departureTime, dayOfWeek - 1);
     }
 
-    private long distBetweenTwoStopsWalkingMin(PublicTransportStop fromStop, PublicTransportStop toStop){
-        return Math.round(distBetweenTwoStops(fromStop, toStop)*110*10);
+    private int computeWalk(PublicTransportStop fromStop, PublicTransportStop toStop){
+        return (int) Math.round(distBetweenTwoStops(fromStop, toStop)*110*6);
     }
 
     private double distBetweenTwoStops(PublicTransportStop fromStop, PublicTransportStop toStop){
