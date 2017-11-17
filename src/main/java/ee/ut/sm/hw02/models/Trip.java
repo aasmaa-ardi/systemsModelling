@@ -7,7 +7,6 @@ public class Trip {
 
     private Long tripId;
     private Long serviceId;
-    private String directionCode;
     private Route route;
     private LinkedList<PublicTransportStop> stops;
     private boolean[] days;
@@ -40,14 +39,6 @@ public class Trip {
         this.serviceId = serviceId;
     }
 
-    public String getDirectionCode() {
-        return directionCode;
-    }
-
-    public void setDirectionCode(String directionCode) {
-        this.directionCode = directionCode;
-    }
-
     public LinkedList<PublicTransportStop> getStops() {
         return stops;
     }
@@ -69,7 +60,6 @@ public class Trip {
         return "Trip{" +
                 "tripId=" + tripId +
                 ", serviceId=" + serviceId +
-                ", directionCode='" + directionCode + '\'' +
                 ", routeId=" + route.getId() +
                 ", days=" + Arrays.toString(days) +
                 '}';

@@ -1,17 +1,16 @@
 package ee.ut.sm.hw02.models;
 
-import ee.ut.sm.hw02.OwnTime;
+import ee.ut.sm.hw02.ExtendedTime;
 
 import java.time.Duration;
-import java.time.LocalTime;
 
 public class TravelInfo {
 
     private PublicTransportStop actualStop;
     private PublicTransportStop nextStop;
     private Duration travelTime;
-    private OwnTime departureTime;
-    private OwnTime arrivalTime;
+    private ExtendedTime departureTime;
+    private ExtendedTime arrivalTime;
 
     public TravelInfo(PublicTransportStop actualStop, PublicTransportStop nextStop, Long tripId) {
         this.actualStop = actualStop;
@@ -48,19 +47,19 @@ public class TravelInfo {
         this.actualStop = actualStop;
     }
 
-    public OwnTime getDepartureTime() {
+    public ExtendedTime getDepartureTime() {
         return departureTime;
     }
 
-    public void setDepartureTime(OwnTime departureTime) {
+    public void setDepartureTime(ExtendedTime departureTime) {
         this.departureTime = departureTime;
     }
 
-    public OwnTime getArrivalTime() {
+    public ExtendedTime getArrivalTime() {
         return arrivalTime;
     }
 
-    public void setArrivalTime(OwnTime arrivalTime) {
+    public void setArrivalTime(ExtendedTime arrivalTime) {
         this.arrivalTime = arrivalTime;
     }
 

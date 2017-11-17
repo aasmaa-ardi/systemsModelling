@@ -1,19 +1,17 @@
 package ee.ut.sm.hw02.models;
 
-import ee.ut.sm.hw02.OwnTime;
+import ee.ut.sm.hw02.ExtendedTime;
 import ee.ut.sm.hw02.enums.TravelType;
-
-import java.time.LocalTime;
 
 public class TravelLeg {
 
 	private TravelType travelType;
     private Route route;
+    private Trip usedTrip;
     private PublicTransportStop source;
     private PublicTransportStop destination;
-    private OwnTime departureTime;
-    private OwnTime arrivalTime;
-    private Trip usedTrip;
+    private ExtendedTime departureTime;
+    private ExtendedTime arrivalTime;
 
     public Route getRoute() {
         return route;
@@ -55,19 +53,19 @@ public class TravelLeg {
         this.usedTrip = usedTrip;
     }
 
-    public OwnTime getDepartureTime() {
+    public ExtendedTime getDepartureTime() {
         return departureTime;
     }
 
-    public void setDepartureTime(OwnTime departureTime) {
+    public void setDepartureTime(ExtendedTime departureTime) {
         this.departureTime = departureTime;
     }
 
-    public OwnTime getArrivalTime() {
+    public ExtendedTime getArrivalTime() {
         return arrivalTime;
     }
 
-    public void setArrivalTime(OwnTime arrivalTime) {
+    public void setArrivalTime(ExtendedTime arrivalTime) {
         this.arrivalTime = arrivalTime;
     }
 

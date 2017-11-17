@@ -2,7 +2,7 @@ package ee.ut.sm.hw02;
 
 import ee.ut.sm.hw02.enums.RouteType;
 import ee.ut.sm.hw02.enums.TravelType;
-import ee.ut.sm.hw02.filters.StopCriteria;
+import ee.ut.sm.hw02.filters.StopCoordsCriteria;
 import ee.ut.sm.hw02.models.*;
 
 import java.io.BufferedReader;
@@ -20,13 +20,13 @@ public class TripPlannerController {
     private Map<Long, Trip> trips;
     private Map<String, Route> routes;
     private List<PublicTransportStop> stopsList;
-    private StopCriteria stopCriteria;
+    private StopCoordsCriteria stopCoordsCriteria;
 
     public TripPlannerController() throws IOException {
         stops = new HashMap<>();
         routes = new HashMap<>();
         trips = new HashMap<>();
-        stopCriteria = new StopCriteria();
+        stopCoordsCriteria = new StopCoordsCriteria();
         this.stopsList = new ArrayList<>();
         if (! (loadStops() && loadRoutes() && loadTrips() && loadStopTimes() && loadCalendar())) {
             throw new IOException("Error while loading files");
@@ -36,33 +36,28 @@ public class TripPlannerController {
         System.out.println("All data loaded...");
     }
 
-    private PublicTransportStop findStop(String param){
-        PublicTransportStop result = null;
-        try {
-            if (param.startsWith("ID")) {
-                Long stopId = Long.valueOf(param.substring(2));
-                result = stops.get(stopId);
-            } else if (param.startsWith("X") && param.contains("Y")) {
-                String[] parts = param.substring(1).split("Y");
-                result = stopCriteria.getPublicTransportStopByCoordinates(stopsList, Double.valueOf(parts[0]), Double.valueOf(parts[1]));
-            }
-        } catch(Exception e){
-            System.out.println("There was a problem with user input parameters.");
-        }
-        return result;
+    public Plan getPlanForTrip(String departureString, String destinationString, String dateString, String departureTimeString) {
+        ExtendedTime departureTime = new ExtendedTime(departureTimeString);
+        LocalDate date = LocalDate.parse(dateString, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        int dayOfWeek = date.getDayOfWeek().getValue();
+
+        PublicTransportStop destinationStop = findStop(destinationString);
+        PublicTransportStop departureStop = findStop(departureString);
+
+        return lookForPlan(departureStop, destinationStop, departureTime, dayOfWeek - 1, date);
     }
 
-    private Plan dijkstra(PublicTransportStop departure, PublicTransportStop destination,
-                          OwnTime departureTime, int weekDay) {
+    private Plan lookForPlan(PublicTransportStop departure, PublicTransportStop destination,
+                             ExtendedTime departureTime, int weekDay, LocalDate date) {
         List<PublicTransportStop> unfinishedStops = new ArrayList<>();
         unfinishedStops.addAll(stops.values());
 
-        Map<PublicTransportStop, OwnTime> dist = new HashMap<>();
+        Map<PublicTransportStop, ExtendedTime> dist = new HashMap<>();
         Map<PublicTransportStop, PublicTransportStop> prev = new HashMap<>();
         Map<PublicTransportStop, Long> usedTrips = new HashMap<>();
 
         for (PublicTransportStop stop: unfinishedStops) {
-            dist.put(stop, OwnTime.MAX);
+            dist.put(stop, ExtendedTime.MAX);
             prev.put(stop, null);
             usedTrips.put(stop, null);
         }
@@ -76,7 +71,7 @@ public class TripPlannerController {
                 long walkSeconds = computeWalkInSeconds(stop, nearestStop);
                 //max walking time 60 minutes
                 if( walkSeconds < 3600){
-                    OwnTime walkEnd = dist.get(nearestStop).addTime(new OwnTime(walkSeconds));
+                    ExtendedTime walkEnd = dist.get(nearestStop).addTime(new ExtendedTime(walkSeconds));
                     if( walkEnd.isBefore(dist.get(stop))) {
                         dist.put(stop, walkEnd);
                         prev.put(stop, nearestStop);
@@ -95,10 +90,10 @@ public class TripPlannerController {
             }
 
             Map<Long, TravelInfo> infoMap = nearestStop.getTimetable().getInfoMap();
-            Map<Long, OwnTime> timesMap = nearestStop.getTimetable().getTimesMap();
+            Map<Long, ExtendedTime> timesMap = nearestStop.getTimetable().getTimesMap();
 
             for(Long tripId: tripsOfStop) { //try every connection to travel to another stop
-                OwnTime tripTime = timesMap.get(tripId); //departure time from nearestStop for actual trip
+                ExtendedTime tripTime = timesMap.get(tripId); //departure time from nearestStop for actual trip
                 if (tripTime.isBefore(dist.get(nearestStop))) { //if trip is before time that we have we cannot take it
                     continue;
                 }
@@ -108,7 +103,7 @@ public class TripPlannerController {
                     continue;
                 }
 
-                OwnTime arrivalTime = info.getArrivalTime(); //arrivalTime to nextStop
+                ExtendedTime arrivalTime = info.getArrivalTime(); //arrivalTime to nextStop
                 if (arrivalTime.isBefore(dist.get(nextStop))) {
                     dist.put(nextStop, arrivalTime);
                     prev.put(nextStop, nearestStop);
@@ -116,8 +111,31 @@ public class TripPlannerController {
                 }
             }
         }
+        return generatePlan(departure, destination, dist, prev, usedTrips, date);
+    }
+
+    private PublicTransportStop findStop(String param){
+        PublicTransportStop result = null;
+        try {
+            if (param.startsWith("ID")) {
+                Long stopId = Long.valueOf(param.substring(2));
+                result = stops.get(stopId);
+            } else if (param.startsWith("X") && param.contains("Y")) {
+                String[] parts = param.substring(1).split("Y");
+                result = stopCoordsCriteria.meetsCriteria(stopsList, Double.valueOf(parts[0]), Double.valueOf(parts[1])).get(0);
+            }
+        } catch(Exception e){
+            System.out.println("There was a problem with user input parameters.");
+        }
+        return result;
+    }
+
+    private Plan generatePlan(PublicTransportStop departure, PublicTransportStop destination,
+                              Map<PublicTransportStop, ExtendedTime> dist, Map<PublicTransportStop,
+            PublicTransportStop> prev, Map<PublicTransportStop, Long> usedTrips, LocalDate date) {
 
         Plan plan = new Plan();
+        plan.setDepartureDate(date);
 
         PublicTransportStop actualStop = destination;
         PublicTransportStop prevStop = prev.get(actualStop);
@@ -162,7 +180,7 @@ public class TripPlannerController {
         return plan;
     }
 
-    private PublicTransportStop getStopWithMinDist(Map<PublicTransportStop, OwnTime> dist,
+    private PublicTransportStop getStopWithMinDist(Map<PublicTransportStop, ExtendedTime> dist,
                                                    List<PublicTransportStop> unfinishedStops) {
         PublicTransportStop closestStop = null;
         for (PublicTransportStop stop: unfinishedStops) {
@@ -171,17 +189,6 @@ public class TripPlannerController {
             }
         }
         return closestStop;
-    }
-
-    public Plan getPlanForTrip(String departureString, String destinationString, String dateString, String departureTimeString) {
-        OwnTime departureTime = new OwnTime(departureTimeString);
-        LocalDate date = LocalDate.parse(dateString, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-        int dayOfWeek = date.getDayOfWeek().getValue();
-
-        PublicTransportStop destinationStop = findStop(destinationString);
-        PublicTransportStop departureStop = findStop(departureString);
-
-        return dijkstra(departureStop, destinationStop, departureTime, dayOfWeek - 1);
     }
 
     private long computeWalkInSeconds(PublicTransportStop fromStop, PublicTransportStop toStop){
@@ -264,7 +271,7 @@ public class TripPlannerController {
                 Timetable timetable = stop.getTimetable();
                 trip.getStops().addLast(stops.get(stopId));
                 timetable.addTrip(tripId);
-                timetable.addTime(tripId, new OwnTime(depTime));
+                timetable.addTime(tripId, new ExtendedTime(depTime));
             }
         } catch (IOException|DateTimeParseException e) {
             System.out.println(e);
@@ -311,7 +318,6 @@ public class TripPlannerController {
                 route.addTrip(trip.getTripId());
                 trip.setServiceId(Long.parseLong(tokenizer.nextToken()));
                 trip.setTripId(Long.parseLong(tokenizer.nextToken()));
-                trip.setDirectionCode(tokenizer.nextToken());
                 trips.put(trip.getTripId(), trip);
             }
         } catch (IOException e) {

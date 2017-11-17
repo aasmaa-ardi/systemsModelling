@@ -1,47 +1,46 @@
 package ee.ut.sm.hw02.models;
 
 
-import ee.ut.sm.hw02.OwnTime;
+import ee.ut.sm.hw02.ExtendedTime;
 
-import java.time.LocalTime;
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class Plan {
 
     private PublicTransportStop departureStop;
     private PublicTransportStop destinationStop;
-    private Date departureDate;
-    private OwnTime departureTime;
-    private OwnTime approxArrivalTime;
+    private LocalDate departureDate;
+    private ExtendedTime departureTime;
+    private ExtendedTime approxArrivalTime;
     private List<TravelLeg> travelLegs;
 
     public Plan() {
         travelLegs = new ArrayList<>();
     }
 
-    public Date getDepartureDate() {
+    public LocalDate getDepartureDate() {
         return departureDate;
     }
 
-    public void setDepartureDate(Date departureDate) {
+    public void setDepartureDate(LocalDate departureDate) {
         this.departureDate = departureDate;
     }
 
-    public OwnTime getDepartureTime() {
+    public ExtendedTime getDepartureTime() {
         return departureTime;
     }
 
-    public void setDepartureTime(OwnTime departureTime) {
+    public void setDepartureTime(ExtendedTime departureTime) {
         this.departureTime = departureTime;
     }
 
-    public OwnTime getApproxArrivalTime() {
+    public ExtendedTime getApproxArrivalTime() {
         return approxArrivalTime;
     }
 
-    public void setApproxArrivalTime(OwnTime approxArrivalTime) {
+    public void setApproxArrivalTime(ExtendedTime approxArrivalTime) {
         this.approxArrivalTime = approxArrivalTime;
     }
 

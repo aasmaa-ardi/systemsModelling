@@ -45,6 +45,14 @@ public class PublicTransportStop {
         this.stopName = stopName;
     }
 
+    public Timetable getTimetable() {
+        return timetable;
+    }
+
+    public void setTimetable(Timetable timetable) {
+        this.timetable = timetable;
+    }
+
     @Override
     public String toString() {
         return "PublicTransportStop{" +
@@ -63,13 +71,5 @@ public class PublicTransportStop {
             PublicTransportStop pts = (PublicTransportStop) obj;
             return this.id.equals(pts.id);
         }
-    }
-
-    public Timetable getTimetable() {
-        return timetable;
-    }
-
-    public void setTimetable(Timetable timetable) {
-        this.timetable = timetable;
     }
 }

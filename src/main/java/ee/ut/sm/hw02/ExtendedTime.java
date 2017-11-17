@@ -1,17 +1,17 @@
 package ee.ut.sm.hw02;
 
-public class OwnTime {
-    public static final OwnTime MAX = new OwnTime(Long.MAX_VALUE);
+public class ExtendedTime {
+    public static final ExtendedTime MAX = new ExtendedTime(Long.MAX_VALUE);
 
     private long seconds;
 
-    public OwnTime() { }
+    public ExtendedTime() { }
 
-    public OwnTime(long seconds) {
+    public ExtendedTime(long seconds) {
         this.seconds = seconds;
     }
 
-    public OwnTime(String time) {
+    public ExtendedTime(String time) {
         computeSeconds(time);
     }
 
@@ -31,9 +31,9 @@ public class OwnTime {
         this.seconds = seconds;
     }
 
-    public OwnTime addTime(OwnTime timeToAdd) {
+    public ExtendedTime addTime(ExtendedTime timeToAdd) {
         long secsToAdd = timeToAdd.getSeconds();
-        OwnTime resultTime = new OwnTime();
+        ExtendedTime resultTime = new ExtendedTime();
         resultTime.setSeconds(this.seconds + secsToAdd);
 
         return resultTime;
@@ -47,7 +47,7 @@ public class OwnTime {
         this.seconds = seconds;
     }
 
-    public boolean isBefore(OwnTime toCompareWith) {
+    public boolean isBefore(ExtendedTime toCompareWith) {
         long secs = toCompareWith.getSeconds();
         long res = seconds - secs;
         return res < 0;
