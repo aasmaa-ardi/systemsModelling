@@ -20,8 +20,6 @@ public class TripPlannerController {
     private Map<Long, Trip> trips;
     private Map<String, Route> routes;
     private List<PublicTransportStop> stopsList;
-    private List<Trip> tripsList;
-    private Plan plan;
     private StopCriteria stopCriteria;
 
     public TripPlannerController() throws IOException {
@@ -30,8 +28,6 @@ public class TripPlannerController {
         trips = new HashMap<>();
         stopCriteria = new StopCriteria();
         this.stopsList = new ArrayList<>();
-        this.tripsList = new ArrayList<>();
-        plan = new Plan();
         if (! (loadStops() && loadRoutes() && loadTrips() && loadStopTimes() && loadCalendar())) {
             throw new IOException("Error while loading files");
         }
@@ -77,12 +73,13 @@ public class TripPlannerController {
             unfinishedStops.remove(nearestStop);
 
             for(PublicTransportStop stop: unfinishedStops){
-                int minutes = computeWalk(stop, nearestStop);
+                long walkSeconds = computeWalkInSeconds(stop, nearestStop);
                 //max walking time 60 minutes
-                if(minutes<60){
-                    OwnTime walkEnd = new OwnTime(dist.get(nearestStop).addMinutes(minutes));
+                if( walkSeconds < 3600){
+                    OwnTime walkEnd = dist.get(nearestStop).addTime(new OwnTime(walkSeconds));
                     if( walkEnd.isBefore(dist.get(stop))) {
                         dist.put(stop, walkEnd);
+                        prev.put(stop, nearestStop);
                     }
                 }
             }
@@ -128,27 +125,38 @@ public class TripPlannerController {
         while (prevStop != null) {
             //while trip has same id, we can consider it as one travelLeg
             TravelLeg travelLeg = new TravelLeg();
-            travelLeg.setUsedTrip(trips.get(usedTrips.get(actualStop)));
-            travelLeg.setRoute(travelLeg.getUsedTrip().getRoute());
-            travelLeg.setTravelType(TravelType.PUBLIC_TRANSPORT);
-
             travelLeg.setDestination(actualStop);
+
             Long usedTrip = usedTrips.get(actualStop);
-            travelLeg.setArrivalTime(actualStop.getTimetable().getInfoMap().get(usedTrip).getDepartureTime());
-            while (usedTrip.equals(usedTrips.get(prevStop))) {
-                prevStop = prev.get(prevStop);
+            if (usedTrip == null) {
+                travelLeg.setTravelType(TravelType.WALK);
+            } else {
+                travelLeg.setUsedTrip(trips.get(usedTrip));
+                travelLeg.setRoute(travelLeg.getUsedTrip().getRoute());
+                travelLeg.setTravelType(TravelType.PUBLIC_TRANSPORT);
+                while (usedTrip.equals(usedTrips.get(prevStop))) {
+                    prevStop = prev.get(prevStop);
+                }
             }
+            travelLeg.setArrivalTime(dist.get(actualStop));
             //id of used trip has changed, this is the end of the travel leg
             travelLeg.setSource(prevStop);
-            travelLeg.setDepartureTime(prevStop.getTimetable().getInfoMap().get(usedTrip).getDepartureTime());
+            travelLeg.setDepartureTime(dist.get(prevStop));
             travelLegs.addFirst(travelLeg);
 
             actualStop = prevStop;
             prevStop = prev.get(prevStop);
         }
+        if (travelLegs.isEmpty()) {
+            return null;
+        }
         plan.setTravelLegs(travelLegs);
         plan.setDepartureStop(departure);
         plan.setDestinationStop(destination);
+        TravelLeg first = travelLegs.getFirst();
+        if (first.getTravelType() == TravelType.PUBLIC_TRANSPORT) {
+            first.setDepartureTime(first.getSource().getTimetable().getTime(first.getUsedTrip().getTripId()));
+        }
         plan.setDepartureTime(travelLegs.getFirst().getDepartureTime());
         plan.setApproxArrivalTime(travelLegs.getLast().getArrivalTime());
         return plan;
@@ -170,32 +178,29 @@ public class TripPlannerController {
         LocalDate date = LocalDate.parse(dateString, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         int dayOfWeek = date.getDayOfWeek().getValue();
 
-        plan.setDestinationStop(findStop(destinationString));
-        plan.setDepartureStop(findStop(departureString));
-        plan.setDepartureTime(departureTime);
+        PublicTransportStop destinationStop = findStop(destinationString);
+        PublicTransportStop departureStop = findStop(departureString);
 
-        return dijkstra(plan.getDepartureStop(), plan.getDestinationStop(), departureTime, dayOfWeek - 1);
+        return dijkstra(departureStop, destinationStop, departureTime, dayOfWeek - 1);
     }
 
-    private int computeWalk(PublicTransportStop fromStop, PublicTransportStop toStop){
-        return (int) Math.round(distBetweenTwoStops(fromStop, toStop)*110*6);
+    private long computeWalkInSeconds(PublicTransportStop fromStop, PublicTransportStop toStop){
+        return Math.round(distBetweenTwoStops(fromStop, toStop) / 1.38);
     }
 
     private double distBetweenTwoStops(PublicTransportStop fromStop, PublicTransportStop toStop){
-        return Math.abs(Math.sqrt(Math.pow(fromStop.getLongitude()-toStop.getLongitude(), 2.0) + Math.pow(fromStop.getLatitude()-toStop.getLatitude(), 2.0)));
-    }
+        double r = 6371; // kiloMetres
+        double lat1 = Math.toRadians(fromStop.getLatitude());
+        double lat2 = Math.toRadians(toStop.getLatitude());
+        double dLat = Math.toRadians(toStop.getLatitude() - fromStop.getLatitude());
+        double dLon = Math.toRadians(toStop.getLongitude() - fromStop.getLongitude());
 
-    private PublicTransportStop closestStopToDestination(List<PublicTransportStop> allDirectlyAccStops) {
-        PublicTransportStop closestSoFar = null;
-        Double minDistSoFar = null;
-        for(PublicTransportStop publicTransportStop: allDirectlyAccStops){
-            Double dist = distBetweenTwoStops(plan.getDestinationStop(), publicTransportStop);
-            if(minDistSoFar == null || dist < minDistSoFar){
-                minDistSoFar = dist;
-                closestSoFar = publicTransportStop;
-            }
-        }
-        return closestSoFar;
+        double a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1) * Math.cos(lat2) *
+                        Math.sin(dLon/2) * Math.sin(dLon/2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+        return r * c * 1000; //metres
     }
 
     // INITIALIZATION METHODS FOR READING FROM FILES

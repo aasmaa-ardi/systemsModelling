@@ -16,14 +16,14 @@ public class Main {
 
         if(isInputValid(args)) {
             //generate plan
-            Plan tripPlan = null;
             TripPlannerController controller = null;
             try {
                 controller = new TripPlannerController();
             } catch (Exception e) {
                 System.exit(1);
             }
-            tripPlan = controller.getPlanForTrip(args[0], args[1], args[2], args[3]);
+            args[3] += ":00";
+            Plan tripPlan = controller.getPlanForTrip(args[0], args[1], args[2], args[3]);
 
             //return result
             if (tripPlan != null) {

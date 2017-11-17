@@ -1,52 +1,82 @@
 package ee.ut.sm.hw02;
 
 public class OwnTime {
-    public static final OwnTime MAX = new OwnTime("48:59:00");
+    public static final OwnTime MAX = new OwnTime(Long.MAX_VALUE);
 
-    private String time;
+    private long seconds;
+
+    public OwnTime() { }
+
+    public OwnTime(long seconds) {
+        this.seconds = seconds;
+    }
 
     public OwnTime(String time) {
-        if (time.matches("([01]?[0-9]|2[0-6]|48):[0-5][0-9]:?[0-5]?[0-9]?")) {
-            this.time = time;
-        } else {
-            throw new IllegalArgumentException("Time is in wrong format "+time);
-        }
+        computeSeconds(time);
     }
 
-    public String addMinutes(int addedMin) {
+    private void computeSeconds(String time) {
         String[] parts = time.split(":");
-        int a = 3600;
-        int seconds = addedMin * 60;
-        for(String part:parts){
-            seconds += Integer.valueOf(part) * a;
-            a = a / 60;
+        long seconds = 0;
+        long timePart = 1;
+        for (int i = parts.length - 1; i >= 0; i--) {
+            String part = parts[i];
+            if (part.startsWith("0")) {
+                part = part.substring(1, 2);
+            }
+            Long val = Long.parseLong(part);
+            seconds += timePart * val;
+            timePart *= 60;
         }
-        int hours = seconds/3600;
-        seconds -= hours * 3600;
-        int minutes = seconds/60;
-        seconds -= minutes * 60;
-        String minuteString = minutes < 10 ? "0"+minutes : String.valueOf(minutes);
-        String hoursString = hours < 10 ? "0"+hours : String.valueOf(hours);
-        String secondsString = seconds < 10 ? "0"+seconds : String.valueOf(seconds);
-        return hoursString+":"+minuteString+":"+secondsString;
+        this.seconds = seconds;
     }
 
-    public String getTime() {
-        return time;
+    public OwnTime addTime(OwnTime timeToAdd) {
+        long secsToAdd = timeToAdd.getSeconds();
+        OwnTime resultTime = new OwnTime();
+        resultTime.setSeconds(this.seconds + secsToAdd);
+
+        return resultTime;
     }
 
-    public void setTime(String time) {
-        this.time = time;
+    public long getSeconds() {
+        return seconds;
+    }
+
+    public void setSeconds(long seconds) {
+        this.seconds = seconds;
     }
 
     public boolean isBefore(OwnTime toCompareWith) {
-        String toCompareWithStr = toCompareWith.getTime();
-        int res = time.compareTo(toCompareWithStr);
+        long secs = toCompareWith.getSeconds();
+        long res = seconds - secs;
         return res < 0;
     }
 
     @Override
     public String toString() {
-        return time;
+        StringBuilder builder = new StringBuilder();
+        long seconds = this.seconds;
+        long hours = seconds / 3600;
+        seconds -= hours * 3600;
+        long minutes = seconds / 60;
+        seconds -= minutes * 60;
+
+        if (hours < 10) {
+            builder.append("0");
+        }
+        builder.append(hours);
+        builder.append(":");
+        if (minutes < 10) {
+            builder.append("0");
+        }
+        builder.append(minutes);
+        builder.append(":");
+        if (seconds < 10) {
+            builder.append("0");
+        }
+        builder.append(seconds);
+
+        return builder.toString();
     }
 }
