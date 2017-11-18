@@ -38,11 +38,29 @@ public class TripPlannerController {
 
     public Plan getPlanForTrip(String departureString, String destinationString, String dateString, String departureTimeString) {
         ExtendedTime departureTime = new ExtendedTime(departureTimeString);
-        LocalDate date = LocalDate.parse(dateString, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        if (! departureTime.isValid()) {
+            System.err.println("Invalid input time!");
+            return null;
+        }
+
+        LocalDate date;
+        try {
+            date = LocalDate.parse(dateString, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        } catch (DateTimeParseException e) {
+            System.err.println("Cannot parse specified date!");
+            return null;
+        }
         int dayOfWeek = date.getDayOfWeek().getValue();
 
         PublicTransportStop destinationStop = findStop(destinationString);
         PublicTransportStop departureStop = findStop(departureString);
+        if (destinationStop == null) {
+            System.err.println("Cannot find destination place!");
+            return null;
+        } else if (departureStop == null) {
+            System.err.println("Cannot find departure place!");
+            return null;
+        }
 
         return lookForPlan(departureStop, destinationStop, departureTime, dayOfWeek - 1, date);
     }
@@ -153,6 +171,7 @@ public class TripPlannerController {
             Long usedTrip = usedTrips.get(actualStop);
             if (usedTrip == null) {
                 travelLeg.setTravelType(TravelType.WALK);
+                travelLeg.setDepartureTime(dist.get(prevStop));
             } else {
                 travelLeg.setUsedTrip(trips.get(usedTrip));
                 travelLeg.setRoute(travelLeg.getUsedTrip().getRoute());
@@ -160,11 +179,10 @@ public class TripPlannerController {
                 while (usedTrip.equals(usedTrips.get(prevStop))) {
                     prevStop = prev.get(prevStop);
                 }
+                travelLeg.setDepartureTime(prevStop.getTimetable().getTimesMap().get(usedTrip));
             }
             travelLeg.setArrivalTime(dist.get(actualStop));
-            //id of used trip has changed, this is the end of the travel leg
             travelLeg.setSource(prevStop);
-            travelLeg.setDepartureTime(dist.get(prevStop));
             travelLegs.addFirst(travelLeg);
 
             actualStop = prevStop;

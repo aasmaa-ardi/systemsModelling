@@ -1,5 +1,7 @@
 package ee.ut.sm.hw02;
 
+import java.time.LocalDate;
+
 public class ExtendedTime {
     public static final ExtendedTime MAX = new ExtendedTime(Long.MAX_VALUE);
 
@@ -78,5 +80,13 @@ public class ExtendedTime {
         builder.append(seconds);
 
         return builder.toString();
+    }
+
+    public boolean isValid() {
+        boolean valid = true;
+        if (! this.toString().matches("([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]")) {
+            valid = false;
+        }
+        return valid;
     }
 }

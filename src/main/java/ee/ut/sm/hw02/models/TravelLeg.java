@@ -77,7 +77,8 @@ public class TravelLeg {
                 + source.getId()+", "+source.getStopName() +") to ("+ destination.getId()+ ", "
                 + destination.getStopName()+") travel type: " + travelType;
         if(!travelType.equals(WALK)){
-            response = response + " route: " + route.getShortName() + " trip:" + usedTrip.getTripId();
+            response = response + " " + route.getType() + " route: " + route.getShortName()
+                    + " trip:" + usedTrip.getTripId();
         }
 		return response;
 	}
