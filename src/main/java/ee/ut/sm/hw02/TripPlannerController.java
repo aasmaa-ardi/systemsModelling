@@ -125,7 +125,12 @@ public class TripPlannerController {
                 result = stopCoordsCriteria.meetsCriteria(stopsList, Double.valueOf(parts[0]), Double.valueOf(parts[1])).get(0);
             }
         } catch(Exception e){
-            System.out.println("There was a problem with user input parameters.");
+            System.out.println("Stop with parameters "+ param +" cant be found in the system.");
+            System.exit(1);
+        }
+        if (result == null){
+            System.out.println("Stop with parameters "+ param +" cant be found in the system.");
+            System.exit(1);
         }
         return result;
     }

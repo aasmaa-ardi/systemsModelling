@@ -1,7 +1,6 @@
 package ee.ut.sm.hw02;
 
 import ee.ut.sm.hw02.models.Plan;
-
 import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -10,9 +9,6 @@ import java.time.format.DateTimeParseException;
 public class Main {
 
     public static void main(String[] args) throws ParseException {
-        for(String arg:args){
-            System.out.println(arg);
-        }
 
         if(isInputValid(args)) {
             //generate plan
@@ -25,10 +21,8 @@ public class Main {
             args[3] += ":00";
             Plan tripPlan = controller.getPlanForTrip(args[0], args[1], args[2], args[3]);
 
-            //return result
             if (tripPlan != null) {
                 System.out.println(tripPlan.toString());
-                //TODO print plan of trip to user
             } else {
                 System.out.println("No plan can be generated for specified input. :(");
             }

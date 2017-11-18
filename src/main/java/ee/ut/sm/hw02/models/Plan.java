@@ -1,8 +1,6 @@
 package ee.ut.sm.hw02.models;
 
-
 import ee.ut.sm.hw02.ExtendedTime;
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,12 +68,14 @@ public class Plan {
 
     @Override
     public String toString() {
-        return "Plan{" +
-                "departureStop=" + departureStop.getStopName() +
-                ", destinationStop=" + destinationStop.getStopName() +
-                ", departureTime=" + departureTime +
-                ", approxArrivalTime=" + approxArrivalTime +
-                ", travelLegs=" + travelLegs +
-                '}';
+        String response= "RESULT.\nThe Optimal trip plan from departure stop ( id= " + departureStop.getId()
+                +", name ="+departureStop.getStopName()+") to destination stop ( id="+departureStop.getId()+", name="+
+                destinationStop.getStopName() + ")\nwith departure time ("+departureDate.toString()+" "+departureTime.toString()+
+                ") and approximate arrival time (" + approxArrivalTime +
+                ")\ncontains following travelLegs:\n";
+        for(int i=0; i<travelLegs.size(); i++){
+            response = response + (i+1) + "." + travelLegs.get(i).toString()+"\n";
+        }
+        return response;
     }
 }

@@ -3,6 +3,8 @@ package ee.ut.sm.hw02.models;
 import ee.ut.sm.hw02.ExtendedTime;
 import ee.ut.sm.hw02.enums.TravelType;
 
+import static ee.ut.sm.hw02.enums.TravelType.WALK;
+
 public class TravelLeg {
 
 	private TravelType travelType;
@@ -71,12 +73,12 @@ public class TravelLeg {
 
     @Override
 	public String toString() {
-		return "TravelLeg{" +
-				"travelType=" + travelType +
-				", route='" + route + '\'' +
-				", trip='" + usedTrip.getTripId() + '\'' +
-				", departure Stop Id =" + source +
-				", destination Stop Id =" + destination +
-				'}';
+        String response = "TravelLeg: "+ departureTime +" - "+ arrivalTime + " from ("
+                + source.getId()+", "+source.getStopName() +") to ("+ destination.getId()+ ", "
+                + destination.getStopName()+") travel type: " + travelType;
+        if(!travelType.equals(WALK)){
+            response = response + " route: " + route.getShortName() + " trip:" + usedTrip.getTripId();
+        }
+		return response;
 	}
 }
